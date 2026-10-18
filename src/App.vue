@@ -1,49 +1,26 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import MetronomePanel from './components/MetronomePanel.vue'
 
-const features = ref([
+const upcoming = [
   { icon: '📖', name: '技图鉴', desc: '技名 · 动作分解 · 要点提示' },
-  { icon: '🥁', name: '节拍器', desc: 'BPM 可调 · 八拍口令' },
   { icon: '⏱️', name: '练习计时', desc: '计时 · 打卡 · 训练记录' },
   { icon: '🎥', name: '视频镜像', desc: '慢放 · 左右翻转对照' },
-])
-
-const info = ref({ size: '', dpr: '', ua: '' })
-
-onMounted(() => {
-  info.value = {
-    size: `${window.innerWidth} × ${window.innerHeight}`,
-    dpr: String(window.devicePixelRatio),
-    ua: navigator.userAgent,
-  }
-})
+]
 </script>
 
 <template>
   <div class="page">
     <header class="hero">
-      <div class="badge">阶段 0 · 已跑通</div>
       <h1>WOTA 工具箱</h1>
       <p class="sub">给打师的学习与练习助手 🐋</p>
     </header>
 
-    <section class="card">
-      <h2>✅ 你的第一个网页已经在手机上跑起来了</h2>
-      <p class="hint">
-        看到这个页面，说明「写代码 → 构建 → 手机浏览」这条链路已经打通。
-        以后每加一个功能，就刷新一下手机，立刻能看到变化。
-      </p>
-      <dl class="info">
-        <div><dt>屏幕</dt><dd>{{ info.size }}</dd></div>
-        <div><dt>像素比</dt><dd>{{ info.dpr }}</dd></div>
-      </dl>
-      <p class="ua">{{ info.ua }}</p>
-    </section>
+    <MetronomePanel />
 
     <section class="card">
-      <h2>接下来要做的事</h2>
+      <h2>接下来</h2>
       <ul class="feat">
-        <li v-for="f in features" :key="f.name">
+        <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
           <span class="txt">
             <strong>{{ f.name }}</strong>
@@ -54,7 +31,7 @@ onMounted(() => {
       </ul>
     </section>
 
-    <footer>v0.0.1 · 本地开发中</footer>
+    <footer>v0.1.0 · 节拍器已上线</footer>
   </div>
 </template>
 
@@ -67,21 +44,11 @@ onMounted(() => {
 
 .hero {
   text-align: center;
-  padding: 16px 0 24px;
-}
-
-.badge {
-  display: inline-block;
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #1b3a6b;
-  color: #8ec5ff;
-  margin-bottom: 12px;
+  padding: 8px 0 20px;
 }
 
 h1 {
-  font-size: 28px;
+  font-size: 26px;
   margin: 0 0 6px;
   letter-spacing: 1px;
 }
@@ -90,55 +57,6 @@ h1 {
   color: var(--muted);
   margin: 0;
   font-size: 14px;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
-}
-
-.card h2 {
-  font-size: 15px;
-  margin: 0 0 10px;
-  color: #cfe3ff;
-  font-weight: 600;
-}
-
-.hint {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.7;
-  margin: 0 0 12px;
-}
-
-.info {
-  display: flex;
-  gap: 20px;
-  margin: 0 0 8px;
-}
-
-.info div {
-  display: flex;
-  gap: 8px;
-  font-size: 13px;
-}
-
-dt {
-  color: var(--muted);
-}
-
-dd {
-  margin: 0;
-}
-
-.ua {
-  font-size: 11px;
-  color: #5b6b85;
-  word-break: break-all;
-  margin: 0;
 }
 
 .feat {
@@ -161,6 +79,7 @@ dd {
 
 .ico {
   font-size: 20px;
+  line-height: 1;
 }
 
 .txt {
@@ -187,6 +106,7 @@ dd {
   border: 1px solid var(--line);
   padding: 2px 8px;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 footer {

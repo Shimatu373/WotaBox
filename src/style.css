@@ -24,3 +24,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* 通用卡片：App 与各功能面板共用 */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.card h2 {
+  font-size: 15px;
+  margin: 0 0 10px;
+  color: #cfe3ff;
+  font-weight: 600;
+}
