@@ -1,13 +1,13 @@
 <script setup>
 import MetronomePanel from './components/MetronomePanel.vue'
+import BpmPanel from './components/BpmPanel.vue'
 import WazaPanel from './components/WazaPanel.vue'
 import FavoritesPanel from './components/FavoritesPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 
 const upcoming = [
   { icon: '🗺️', name: '全国光棒地图', desc: '收录各地界隈与活动场地，找同好、走圣地巡礼' },
-  { icon: '🎬', name: '视频对比器', desc: '本地视频与网络视频同屏对照，纠正动作细节' },
-  { icon: '🎵', name: 'BPM 测试', desc: '分析乐曲速度，给出练习节奏建议' },
+  { icon: '🎬', name: '视频对比器', desc: '本地视频慢放 / 镜像 / 逐帧，纠正动作细节' },
   { icon: '💡', name: '你知道吗', desc: '光棒小知识合集' },
 ]
 </script>
@@ -21,11 +21,13 @@ const upcoming = [
 
     <MetronomePanel />
 
+    <BpmPanel />
+
     <WazaPanel />
 
     <FavoritesPanel />
 
-    <CollapsibleCard id="upcoming" title="接下来" summary="4 项" :default-open="false">
+    <CollapsibleCard id="upcoming" title="接下来" summary="3 项" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
@@ -38,7 +40,7 @@ const upcoming = [
       </ul>
     </CollapsibleCard>
 
-    <footer>v0.5.0 · 节拍器 + 技图鉴 + 收藏夹</footer>
+    <footer>v0.6.0 · 节拍器 / BPM 测试 / 技图鉴 / 收藏夹</footer>
   </div>
 </template>
 

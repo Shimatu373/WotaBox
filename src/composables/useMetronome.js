@@ -1,4 +1,5 @@
 import { ref, shallowRef, onUnmounted } from 'vue'
+import { bpm as sharedBpm } from './sharedState.js'
 
 /**
  * 节拍器核心（Web Audio 前瞻调度）
@@ -24,7 +25,7 @@ const CLICK = {
 }
 
 export function useMetronome({ bpm: initialBpm = 120, countIn: initialCountIn = 4 } = {}) {
-  const bpm = ref(initialBpm)
+  const bpm = sharedBpm // 与 BPM 测试面板共享，测完能一键送进来
   const countIn = ref(initialCountIn) // 预备拍数量：0 = 关闭
   const isRunning = ref(false)
   const beatIndex = ref(0) // 累计拍数；预备拍阶段为负数（-4..-1）

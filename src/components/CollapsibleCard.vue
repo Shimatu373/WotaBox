@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -23,6 +23,20 @@ function readStored() {
 
 const stored = readStored()
 const open = ref(stored === null ? props.defaultOpen : stored)
+const rootEl = ref(null)
+
+// 其它面板可以请求展开本卡片并滚动过来：
+//   window.dispatchEvent(new CustomEvent('wota:open-panel', { detail: 'metronome' }))
+function handleOpenRequest(e) {
+  if (e.detail !== props.id) return
+  open.value = true
+  requestAnimationFrame(() => {
+    rootEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
+onMounted(() => window.addEventListener('wota:open-panel', handleOpenRequest))
+onUnmounted(() => window.removeEventListener('wota:open-panel', handleOpenRequest))
 
 watch(open, (v) => {
   try {
@@ -38,7 +52,7 @@ function toggle() {
 </script>
 
 <template>
-  <section class="card panel" :class="{ open }">
+  <section ref="rootEl" class="card panel" :class="{ open }">
     <button class="head" type="button" :aria-expanded="open" @click="toggle">
       <span class="title">{{ title }}</span>
       <span class="head-right">
