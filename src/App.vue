@@ -1,6 +1,7 @@
 <script setup>
 import MetronomePanel from './components/MetronomePanel.vue'
 import WazaPanel from './components/WazaPanel.vue'
+import FavoritesPanel from './components/FavoritesPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 
 const upcoming = [
@@ -20,6 +21,8 @@ const upcoming = [
 
     <WazaPanel />
 
+    <FavoritesPanel />
+
     <CollapsibleCard id="upcoming" title="接下来" summary="2 项" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
@@ -33,7 +36,7 @@ const upcoming = [
       </ul>
     </CollapsibleCard>
 
-    <footer>v0.4.0 · 节拍器 + 技图鉴</footer>
+    <footer>v0.5.0 · 节拍器 + 技图鉴 + 收藏夹</footer>
   </div>
 </template>
 

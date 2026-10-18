@@ -2,6 +2,13 @@
 import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
 import { WAZA, SERIES_INFO, wikiUrl, allSeries } from '../data/waza.js'
+import {
+  collections,
+  statusMeta,
+  isInCollection,
+  toggleWazaInCollection,
+  bestStatusOf,
+} from '../composables/useCollections.js'
 
 const keyword = ref('')
 const activeSeries = ref('全部')
@@ -75,6 +82,11 @@ function seriesMeta(name) {
               <span v-if="w.nameRomaji" class="romaji">{{ w.nameRomaji }}</span>
             </span>
           </span>
+          <span
+            v-if="bestStatusOf(w.id)"
+            class="status-dot"
+            :style="{ background: statusMeta(bestStatusOf(w.id)).color }"
+          />
           <span class="right">
             <span v-if="w.bars" class="bars">{{ w.bars }} 八拍</span>
             <span class="arrow">›</span>
@@ -131,6 +143,26 @@ function seriesMeta(name) {
                   <li v-for="(s, i) in w.steps" :key="i">{{ s }}</li>
                 </ol>
                 <p v-else class="empty">待补充 —— 在 <code>src/data/waza.js</code> 里填这个技的 <code>steps</code></p>
+              </section>
+
+              <section class="block">
+                <h3>收藏夹</h3>
+                <div class="coll-chips">
+                  <button
+                    v-for="c in collections"
+                    :key="c.id"
+                    class="coll-chip"
+                    :class="{ on: isInCollection(c.id, w.id) }"
+                    type="button"
+                    @click="toggleWazaInCollection(c.id, w.id)"
+                  >
+                    <i class="cdot" :style="{ background: c.color }" />
+                    {{ c.name }}
+                  </button>
+                </div>
+                <p v-if="bestStatusOf(w.id)" class="coll-hint">
+                  掌握状态：{{ statusMeta(bestStatusOf(w.id)).label }}
+                </p>
               </section>
 
               <section v-if="w.pitfalls" class="block">
@@ -490,6 +522,53 @@ code {
   text-decoration: none;
   border-bottom: 1px dashed rgba(127, 208, 255, 0.4);
   padding-bottom: 1px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.coll-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.coll-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #0f1729;
+  color: #7f9ac0;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.coll-chip.on {
+  border-color: #2f6fd0;
+  background: #16233c;
+  color: #cfe3ff;
+}
+
+.cdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.coll-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: #7f9ac0;
 }
 
 .hint {
