@@ -31,7 +31,7 @@ const upcoming = [
       </ul>
     </CollapsibleCard>
 
-    <footer>v0.2.0 · 节拍器 + 预备拍 · 面板可折叠</footer>
+    <footer>v0.3.0 · PWA 已就绪</footer>
   </div>
 </template>
 
@@ -114,5 +114,8 @@ footer {
   font-size: 11px;
   color: #4d5a70;
   margin-top: 24px;
+}
+</style>
+rgin-top: 24px;
 }
 </style>

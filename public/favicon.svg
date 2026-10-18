@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WOTA 工具箱">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3c8ce6" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#0b1020" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="barA" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2f6fd0" />
+      <stop offset="100%" stop-color="#7ab4f2" />
+    </linearGradient>
+    <linearGradient id="barB" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a8dcff" />
+      <stop offset="100%" stop-color="#5fa4e8" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#0b1020" />
+  <circle cx="256" cy="256" r="210" fill="url(#glow)" />
+
+  <g stroke-linecap="round">
+    <line x1="128" y1="368" x2="368" y2="150" stroke="url(#barA)" stroke-width="56" />
+    <line x1="200" y1="160" x2="336" y2="352" stroke="url(#barB)" stroke-width="56" />
+  </g>
+</svg>
