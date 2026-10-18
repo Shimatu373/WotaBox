@@ -116,6 +116,3 @@ footer {
   margin-top: 24px;
 }
 </style>
-rgin-top: 24px;
-}
-</style>
