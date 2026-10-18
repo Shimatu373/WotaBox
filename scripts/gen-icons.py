@@ -12,8 +12,8 @@ from PIL import Image, ImageDraw, ImageFilter
 OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'public', 'icons')
 
 BG = (11, 16, 32, 255)        # #0b1020 与 App 背景一致
-BLUE = (74, 143, 224, 255)    # #4a8fe0
-CYAN = (143, 208, 255, 255)   # #8fd0ff
+ORANGE = (255, 138, 61, 255)  # #ff8a3d
+GOLD = (255, 209, 102, 255)   # #ffd166
 
 
 def content(size):
@@ -25,7 +25,7 @@ def content(size):
     glow = Image.new('RGBA', (s, s), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
     r = s * 0.44
-    gd.ellipse([s / 2 - r, s / 2 - r, s / 2 + r, s / 2 + r], fill=(60, 140, 230, 140))
+    gd.ellipse([s / 2 - r, s / 2 - r, s / 2 + r, s / 2 + r], fill=(255, 168, 84, 132))
     glow = glow.filter(ImageFilter.GaussianBlur(s * 0.10))
     layer = Image.alpha_composite(layer, glow)
 
@@ -50,8 +50,8 @@ def content(size):
         return bar.rotate(angle, resample=Image.BICUBIC, center=(s / 2, s / 2))
 
     # 角度与长度刻意不对称，避免读成 UI 的 "关闭" 叉号
-    bar_a = capsule(-36, BLUE, 0.72, 0.108)
-    bar_b = capsule(24, CYAN, 0.60, 0.108)
+    bar_a = capsule(-36, ORANGE, 0.72, 0.108)
+    bar_b = capsule(24, GOLD, 0.60, 0.108)
 
     # 棒身辉光
     halo = Image.new('RGBA', (s, s), (0, 0, 0, 0))
