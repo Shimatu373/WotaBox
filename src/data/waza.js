@@ -20,6 +20,8 @@
  * ───────────────────────────────────────────────────────────
  */
 
+import { IMPORTED, IMPORTED_SERIES } from './waza-imported.js'
+
 /** 技类型定义 */
 export const TYPE_DEF = {
   kansai: { key: 'kansai', label: '关西', color: '#e0574f', text: '#f3a9a3' },
@@ -34,7 +36,7 @@ export function typeMeta(key) {
 }
 
 /** 系列元信息 */
-export const SERIES_INFO = {
+const CURATED_SERIES_INFO = {
   蒼月剣系: {
     origin: '三水',
     note: '三水创作的长系列，变体众多，是国人技里影响最大的系列之一。',
@@ -56,6 +58,9 @@ export const SERIES_INFO = {
     note: '以「乖離」命名的一族，剑、枪、蛇、正等变体共用同一命名谱系。',
   },
 }
+
+/** 系列元信息（手写 + 批量导入合并） */
+export const SERIES_INFO = { ...CURATED_SERIES_INFO, ...IMPORTED_SERIES }
 
 // [日文名, 中文译名, 系列, 技类型, 覆盖项?]
 const ROWS = [
@@ -173,7 +178,10 @@ function hashId(str) {
   return 'w' + (h >>> 0).toString(36)
 }
 
-export const WAZA = ROWS.map(([nameJa, nameZh, series, type, extra = {}]) => ({
+// 手写的优先；导入数据里同名的不重复加入
+const ALL_ROWS = [...ROWS, ...IMPORTED.filter((r) => !ROWS.some((c) => c[0] === r[0]))]
+
+export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) => ({
   id: extra.id || hashId(nameJa),
   nameJa,
   nameZh: nameZh || null,
