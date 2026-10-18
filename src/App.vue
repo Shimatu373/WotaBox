@@ -1,9 +1,9 @@
 <script setup>
 import MetronomePanel from './components/MetronomePanel.vue'
+import WazaPanel from './components/WazaPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 
 const upcoming = [
-  { icon: '📖', name: '技图鉴', desc: '技名 · 动作分解 · 要点提示' },
   { icon: '⏱️', name: '练习计时', desc: '计时 · 打卡 · 训练记录' },
   { icon: '🎥', name: '视频镜像', desc: '慢放 · 左右翻转对照' },
 ]
@@ -18,7 +18,9 @@ const upcoming = [
 
     <MetronomePanel />
 
-    <CollapsibleCard id="upcoming" title="接下来" summary="3 项" :default-open="false">
+    <WazaPanel />
+
+    <CollapsibleCard id="upcoming" title="接下来" summary="2 项" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
@@ -31,7 +33,7 @@ const upcoming = [
       </ul>
     </CollapsibleCard>
 
-    <footer>v0.3.0 · PWA 已就绪</footer>
+    <footer>v0.4.0 · 节拍器 + 技图鉴</footer>
   </div>
 </template>
 
