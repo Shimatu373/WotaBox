@@ -5,8 +5,10 @@ import FavoritesPanel from './components/FavoritesPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 
 const upcoming = [
-  { icon: '⏱️', name: '练习计时', desc: '计时 · 打卡 · 训练记录' },
-  { icon: '🎥', name: '视频镜像', desc: '慢放 · 左右翻转对照' },
+  { icon: '🗺️', name: '全国光棒地图', desc: '收录各地界隈与活动场地，找同好、走圣地巡礼' },
+  { icon: '🎬', name: '视频对比器', desc: '本地视频与网络视频同屏对照，纠正动作细节' },
+  { icon: '🎵', name: 'BPM 测试', desc: '分析乐曲速度，给出练习节奏建议' },
+  { icon: '💡', name: '你知道吗', desc: '光棒小知识合集' },
 ]
 </script>
 
@@ -23,7 +25,7 @@ const upcoming = [
 
     <FavoritesPanel />
 
-    <CollapsibleCard id="upcoming" title="接下来" summary="2 项" :default-open="false">
+    <CollapsibleCard id="upcoming" title="接下来" summary="4 项" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
