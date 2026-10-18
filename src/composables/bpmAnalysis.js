@@ -182,7 +182,8 @@ function detectTempo(onset, fps) {
 
   const main = round1(best.bpm)
   const set = new Set([main])
-  for (const m of [0.5, 2]) {
+  // 除了倍速/半速，也给出 x1.5 与 x(2/3)——实测 2/3 是最常见的另一种误判
+  for (const m of [0.5, 2 / 3, 1.5, 2]) {
     const v = round1(best.bpm * m)
     if (v >= 40 && v <= 220) set.add(v)
   }
