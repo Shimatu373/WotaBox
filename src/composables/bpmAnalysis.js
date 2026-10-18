@@ -15,7 +15,7 @@
 
 const TARGET_RATE = 11025
 const FRAME = 1024
-const HOP = 256
+export const HOP = 256
 const MIN_BPM = 60
 const MAX_BPM = 200
 const MAX_WINDOW_SEC = 120
@@ -41,16 +41,11 @@ export async function analyzeBpm(file, { onStatus } = {}) {
   // 让 loading 状态先渲染出来，避免界面看起来卡死
   await new Promise((r) => setTimeout(r, 30))
 
-  const { data, rate } = toMonoDownsampled(buffer)
-  if (data.length < rate * 5) throw new Error('音频太短了，至少需要 5 秒')
-
-  const onset = onsetEnvelope(data)
-  const fps = rate / HOP
-  return detectTempo(onset, fps)
+  return analyzeAudioBuffer(buffer)
 }
 
 /** 取一段（长曲子只分析中间 2 分钟），混单声道并降采样 */
-function toMonoDownsampled(buffer) {
+export function toMonoDownsampled(buffer) {
   const sr = buffer.sampleRate
   const dur = buffer.duration
   const startSec = dur > 150 ? Math.min(20, dur * 0.1) : 0
@@ -81,7 +76,7 @@ function toMonoDownsampled(buffer) {
 }
 
 /** 起音强度包络：能量 → 对数差分 → 去局部均值 → 归一化 */
-function onsetEnvelope(x) {
+export function onsetEnvelope(x) {
   const nFrames = Math.floor((x.length - FRAME) / HOP)
   if (nFrames < 32) throw new Error('音频太短了')
 
@@ -134,6 +129,14 @@ function onsetEnvelope(x) {
   return out
 }
 
+/** 对已解码的 AudioBuffer 跑完整条管线（拆出来是为了能在 Node 里做单元测试） */
+export function analyzeAudioBuffer(buffer) {
+  const { data, rate } = toMonoDownsampled(buffer)
+  if (data.length < rate * 5) throw new Error('音频太短了，至少需要 5 秒')
+  const onset = onsetEnvelope(data)
+  return detectTempo(onset, rate / HOP)
+}
+
 function detectTempo(onset, fps) {
   const n = onset.length
   const lagMin = Math.max(2, Math.floor((fps * 60) / MAX_BPM))
@@ -166,7 +169,9 @@ function detectTempo(onset, fps) {
     // 速度先验：以 120 为中心的对数正态，抑制倍速 / 半速误判
     const prior = Math.exp(-Math.pow(Math.log2(bpm / 120), 2) / (2 * 0.5 * 0.5))
 
-    const score = comb * prior
+    // 除以 sqrt(lag)：实测长延迟的相关系数天然偏高（周期性信号在倍数周期上同样相关），
+    // 不加这个抑制会被拽到 2/3 倍、1/2 倍之类的错误速度上
+    const score = (comb * prior) / Math.sqrt(lag)
     if (!best || score > best.score) best = { bpm, score, lag }
   }
 
