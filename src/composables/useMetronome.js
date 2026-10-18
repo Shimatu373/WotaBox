@@ -15,17 +15,19 @@ const LOOKAHEAD_MS = 25 // 调度器心跳（毫秒）
 const SCHEDULE_AHEAD = 0.12 // 提前排程的时间窗（秒）
 const START_OFFSET = 0.08 // 按下开始后，第一拍留给用户的余量（秒）
 
-// 三层音色：组头 > 八拍头 > 普通拍
+// 四层音色：组头 > 八拍头 > 普通拍 > 预备拍
 const CLICK = {
   groupStart: { freq: 1760, gain: 0.5, dur: 0.07 },
   barStart: { freq: 1318, gain: 0.32, dur: 0.055 },
   beat: { freq: 880, gain: 0.16, dur: 0.04 },
+  countIn: { freq: 660, gain: 0.26, dur: 0.05 },
 }
 
-export function useMetronome({ bpm: initialBpm = 120 } = {}) {
+export function useMetronome({ bpm: initialBpm = 120, countIn: initialCountIn = 4 } = {}) {
   const bpm = ref(initialBpm)
+  const countIn = ref(initialCountIn) // 预备拍数量：0 = 关闭
   const isRunning = ref(false)
-  const beatIndex = ref(0) // 从 0 开始的累计拍数
+  const beatIndex = ref(0) // 累计拍数；预备拍阶段为负数（-4..-1）
   const accentEnabled = ref(true) // 是否开启八拍头重音
 
   const ctxRef = shallowRef(null)
@@ -40,6 +42,12 @@ export function useMetronome({ bpm: initialBpm = 120 } = {}) {
     const v = Number(bpm.value)
     if (!Number.isFinite(v) || v <= 0) return 120
     return Math.min(240, Math.max(30, v))
+  }
+
+  function safeCountIn() {
+    const v = Number(countIn.value)
+    if (!Number.isFinite(v) || v <= 0) return 0
+    return Math.min(16, Math.round(v))
   }
 
   function ensureContext() {
@@ -85,6 +93,7 @@ export function useMetronome({ bpm: initialBpm = 120 } = {}) {
 
   /** 判定这一拍属于哪一层 */
   function kindOf(beat) {
+    if (beat < 0) return 'countIn' // 预备拍：低音，不带重音
     const posInBar = beat % 8
     if (posInBar !== 0) return 'beat' // 普通拍
     if (beat % 32 === 0) return 'groupStart' // 四个八拍的第一拍
@@ -151,9 +160,11 @@ export function useMetronome({ bpm: initialBpm = 120 } = {}) {
       }
     }
 
+    const lead = safeCountIn()
+
     queue.length = 0
-    nextBeat = 0
-    beatIndex.value = 0
+    nextBeat = -lead // 预备拍用负数表示：-4, -3, -2, -1
+    beatIndex.value = -lead
     nextNoteTime = ctx.currentTime + START_OFFSET
 
     schedule()
@@ -207,5 +218,5 @@ export function useMetronome({ bpm: initialBpm = 120 } = {}) {
     }
   })
 
-  return { bpm, isRunning, beatIndex, accentEnabled, start, stop, toggle }
+  return { bpm, countIn, isRunning, beatIndex, accentEnabled, start, stop, toggle }
 }

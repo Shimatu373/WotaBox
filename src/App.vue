@@ -1,5 +1,6 @@
 <script setup>
 import MetronomePanel from './components/MetronomePanel.vue'
+import CollapsibleCard from './components/CollapsibleCard.vue'
 
 const upcoming = [
   { icon: '📖', name: '技图鉴', desc: '技名 · 动作分解 · 要点提示' },
@@ -17,8 +18,7 @@ const upcoming = [
 
     <MetronomePanel />
 
-    <section class="card">
-      <h2>接下来</h2>
+    <CollapsibleCard id="upcoming" title="接下来" summary="3 项" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
@@ -29,9 +29,9 @@ const upcoming = [
           <span class="tag">待开发</span>
         </li>
       </ul>
-    </section>
+    </CollapsibleCard>
 
-    <footer>v0.1.0 · 节拍器已上线</footer>
+    <footer>v0.2.0 · 节拍器 + 预备拍 · 面板可折叠</footer>
   </div>
 </template>
 

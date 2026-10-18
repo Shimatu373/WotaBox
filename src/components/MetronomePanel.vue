@@ -1,17 +1,29 @@
 <script setup>
 import { computed, watch } from 'vue'
+import CollapsibleCard from './CollapsibleCard.vue'
 import { useMetronome } from '../composables/useMetronome.js'
 
-const { bpm, isRunning, beatIndex, accentEnabled, toggle } = useMetronome({
+const { bpm, countIn, isRunning, beatIndex, accentEnabled, toggle } = useMetronome({
   bpm: 120,
+  countIn: 4,
 })
 
 const MIN_BPM = 40
 const MAX_BPM = 220
 
+const countInOptions = [
+  { value: 0, label: '关' },
+  { value: 4, label: '4 拍' },
+  { value: 8, label: '8 拍' },
+]
+
 function nudge(delta) {
   const next = Number(bpm.value) + delta
   bpm.value = Math.min(MAX_BPM, Math.max(MIN_BPM, Math.round(next)))
+}
+
+function setCountIn(value) {
+  countIn.value = value
 }
 
 // 挡住手动输入 / 拖动越界的情况
@@ -25,8 +37,14 @@ watch(bpm, (v) => {
   if (clamped !== n) bpm.value = clamped
 })
 
-// 当前处于 32 拍循环里的第几拍；未运行时为 -1（不高亮）
-const groupPos = computed(() => (isRunning.value ? beatIndex.value % 32 : -1))
+// 预备拍阶段 beatIndex 为负数
+const isCountingIn = computed(() => isRunning.value && beatIndex.value < 0)
+const countInLeft = computed(() => (beatIndex.value < 0 ? -beatIndex.value : 0))
+
+// 当前处于 32 拍循环里的第几拍；预备拍或未运行时为 -1（不高亮）
+const groupPos = computed(() =>
+  isRunning.value && beatIndex.value >= 0 ? beatIndex.value % 32 : -1
+)
 
 const cells = computed(() =>
   Array.from({ length: 32 }, (_, i) => ({
@@ -39,10 +57,13 @@ const cells = computed(() =>
 
 const statusText = computed(() => {
   if (!isRunning.value) return '准备就绪'
+  if (beatIndex.value < 0) return '预备中'
   const bar = Math.floor((beatIndex.value % 32) / 8) + 1
   const pos = (beatIndex.value % 8) + 1
   return `第 ${bar} 个八拍 · 第 ${pos} 拍`
 })
+
+const summary = computed(() => `${bpm.value} BPM · ${isRunning.value ? '运行中' : '四个八拍一组'}`)
 
 const bpmNote = computed(() => {
   const n = Number(bpm.value)
@@ -54,12 +75,7 @@ const bpmNote = computed(() => {
 </script>
 
 <template>
-  <section class="card metro">
-    <header class="head">
-      <h2>节拍器</h2>
-      <span class="mode">四个八拍一组</span>
-    </header>
-
+  <CollapsibleCard id="metronome" title="节拍器" :summary="summary">
     <div class="readout">
       <span class="bpm-value">{{ bpm }}</span>
       <span class="bpm-unit">BPM</span>
@@ -79,23 +95,29 @@ const bpmNote = computed(() => {
     </div>
     <p class="bpm-note">{{ bpmNote }}</p>
 
-    <div class="grid" :class="{ running: isRunning }">
-      <div
-        v-for="c in cells"
-        :key="c.i"
-        class="cell"
-        :class="{
-          'group-start': c.groupStart,
-          'bar-start': c.barStart,
-          active: c.active,
-        }"
-      >
-        <span class="dot" />
+    <div class="grid-wrap">
+      <div class="grid" :class="{ dimmed: isCountingIn }">
+        <div
+          v-for="c in cells"
+          :key="c.i"
+          class="cell"
+          :class="{
+            'group-start': c.groupStart,
+            'bar-start': c.barStart,
+            active: c.active,
+          }"
+        >
+          <span class="dot" />
+        </div>
       </div>
+
+      <Transition name="pop" mode="out-in">
+        <div v-if="isCountingIn" :key="countInLeft" class="countin-num">{{ countInLeft }}</div>
+      </Transition>
     </div>
 
     <div class="status">
-      <span class="status-text">{{ statusText }}</span>
+      <span class="status-text" :class="{ counting: isCountingIn }">{{ statusText }}</span>
       <span class="legend">
         <i class="lg lg-group" />组头
         <i class="lg lg-bar" />八拍头
@@ -106,48 +128,49 @@ const bpmNote = computed(() => {
       {{ isRunning ? '停止' : '开始' }}
     </button>
 
-    <label class="switch">
-      <input v-model="accentEnabled" type="checkbox" />
-      <span class="track"><span class="thumb" /></span>
-      <span class="switch-label">八拍头重音</span>
-    </label>
+    <div class="options">
+      <div class="row">
+        <span class="row-label">预备拍</span>
+        <div class="seg">
+          <button
+            v-for="opt in countInOptions"
+            :key="opt.value"
+            class="seg-btn"
+            :class="{ on: countIn === opt.value }"
+            type="button"
+            @click="setCountIn(opt.value)"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+      </div>
 
-    <p class="hint">运行时自动保持屏幕常亮。四个八拍为一组循环，组头最响。</p>
-  </section>
+      <div class="row">
+        <span class="row-label">八拍头重音</span>
+        <label class="switch">
+          <input v-model="accentEnabled" type="checkbox" />
+          <span class="track"><span class="thumb" /></span>
+        </label>
+      </div>
+    </div>
+
+    <p class="hint">
+      预备拍会用低音先数几拍，数完立刻进入正式循环；8 拍正好一个八拍，更贴近实际练习习惯。运行时自动保持屏幕常亮。
+    </p>
+  </CollapsibleCard>
 </template>
 
 <style scoped>
-.head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.head h2 {
-  margin: 0;
-}
-
-.mode {
-  font-size: 11px;
-  color: #7f9ac0;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
 .readout {
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  margin: 6px 0 10px;
+  margin: 4px 0 10px;
 }
 
 .bpm-value {
-  font-size: 56px;
+  font-size: 54px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -1px;
@@ -221,11 +244,20 @@ const bpmNote = computed(() => {
   text-align: center;
 }
 
+.grid-wrap {
+  position: relative;
+  margin: 16px 0 12px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 6px;
-  margin: 16px 0 12px;
+  transition: opacity 200ms ease;
+}
+
+.grid.dimmed {
+  opacity: 0.35;
 }
 
 .cell {
@@ -270,6 +302,35 @@ const bpmNote = computed(() => {
   box-shadow: 0 0 14px rgba(120, 200, 255, 0.95);
 }
 
+.countin-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  font-weight: 700;
+  color: rgba(160, 220, 255, 0.92);
+  text-shadow: 0 0 26px rgba(80, 170, 255, 0.85);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.pop-enter-active,
+.pop-leave-active {
+  transition: opacity 110ms ease, transform 110ms ease;
+}
+
+.pop-enter-from {
+  opacity: 0;
+  transform: scale(0.72);
+}
+
+.pop-leave-to {
+  opacity: 0;
+  transform: scale(1.28);
+}
+
 .status {
   display: flex;
   align-items: center;
@@ -282,6 +343,11 @@ const bpmNote = computed(() => {
 .status-text {
   color: #9db6d6;
   font-variant-numeric: tabular-nums;
+  transition: color 160ms ease;
+}
+
+.status-text.counting {
+  color: #7fd0ff;
 }
 
 .legend {
@@ -335,13 +401,59 @@ const bpmNote = computed(() => {
   box-shadow: 0 6px 18px rgba(217, 83, 79, 0.3);
 }
 
+.options {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+}
+
+.row + .row {
+  margin-top: 8px;
+}
+
+.row-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.seg {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #0f1729;
+  border: 1px solid var(--line);
+}
+
+.seg-btn {
+  border: 0;
+  background: transparent;
+  color: #7f9ac0;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+  font-family: inherit;
+}
+
+.seg-btn.on {
+  background: #2f6fd0;
+  color: #fff;
+  font-weight: 600;
+}
+
 .switch {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-  font-size: 13px;
-  color: var(--muted);
   cursor: pointer;
   user-select: none;
 }
@@ -381,10 +493,6 @@ const bpmNote = computed(() => {
 .switch input:checked + .track .thumb {
   transform: translateX(16px);
   background: #fff;
-}
-
-.switch-label {
-  line-height: 1;
 }
 
 .hint {
