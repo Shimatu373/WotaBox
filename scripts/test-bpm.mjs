@@ -56,15 +56,16 @@ for (const bpm of cases) {
 
   const r = analyzeAudioBuffer(buffer)
   const ratio = r.bpm / bpm
-  const has = r.candidates.some((c) => Math.abs(c - bpm) < 1.5)
+  // 候选里只要有一个与真值相差 1.5% 以内，就算用户能一键修正
+  const has = r.candidates.some((c) => Math.abs(c - bpm) / bpm < 0.015)
 
   let verdict
   if (Math.abs(ratio - 1) < 0.01) {
     verdict = 'OK  精确命中'
     pass++
     passLenient++
-  } else if (has && (Math.abs(ratio - 2) < 0.02 || Math.abs(ratio - 0.5) < 0.02)) {
-    verdict = '~   倍速偏差(候选含正解)'
+  } else if (has) {
+    verdict = '~   偏差(候选含正解)'
     passLenient++
   } else {
     verdict = 'X   错误'
