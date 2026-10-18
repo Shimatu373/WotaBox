@@ -60,7 +60,40 @@ const CURATED_SERIES_INFO = {
 }
 
 /** 系列元信息（手写 + 批量导入合并） */
-export const SERIES_INFO = { ...CURATED_SERIES_INFO, ...IMPORTED_SERIES }
+export const SERIES_INFO = {
+  ...CURATED_SERIES_INFO,
+  ...IMPORTED_SERIES,
+  スネイク系: {
+    origin: 'ばっくほーん〈BackHorn〉（雷蛇改编）',
+    note: 'wiki 有官方分类（分类:スネイク系），以雷蛇为原型的庞大家族。',
+  },
+}
+
+/**
+ * 系列归属覆盖：优先采用 wiki 的官方分类。
+ * 例：乖離スネイク 既属于「乖離」命名族，也被 wiki 归入「スネイク系」——以官方为准。
+ */
+const SERIES_OVERRIDE = {
+  'サンダースネイク': 'スネイク系',
+  'AXISnake': 'スネイク系',
+  'ライトニングスネイク': 'スネイク系',
+  'JKスネイク': 'スネイク系',
+  '黒蝶スネイク': 'スネイク系',
+  '吹雪スネーク': 'スネイク系',
+  '春風スネイク': 'スネイク系',
+  '不知火スネイク': 'スネイク系',
+  '鬼人スネイク': 'スネイク系',
+  '超重力スネイク': 'スネイク系',
+  '乖離スネイク': 'スネイク系',
+  '乖離スネイク改': 'スネイク系',
+  '旧流星スネイク': 'スネイク系',
+  '流星スネイク': 'スネイク系',
+  '流星スネイク 白狐ver': 'スネイク系',
+  '流星スネイク ギアver': 'スネイク系',
+  '流星スネイク ギアver2': 'スネイク系',
+  '流星スネイク ふぇるとver': 'スネイク系',
+  '流星スネイク はらver': 'スネイク系',
+}
 
 // [日文名, 中文译名, 系列, 技类型, 覆盖项?]
 const ROWS = [
@@ -187,7 +220,7 @@ export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) =>
   nameZh: nameZh || null,
   nameRomaji: extra.nameRomaji || null,
   aliases: extra.aliases || [],
-  series: series || null,
+  series: SERIES_OVERRIDE[nameJa] || series || null,
   type: type || null,
   creator: extra.creator || null,
   year: extra.year || null,

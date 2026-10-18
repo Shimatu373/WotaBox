@@ -14,6 +14,10 @@
  */
 
 export const IMPORTED_SERIES = {
+  スネイク系: {
+    origin: 'ばっくほーん〈BackHorn〉（雷蛇改编）',
+    note: 'wiki 有官方分类（分类:スネイク系）。サンダースネイク 为原型，派生版本极多。',
+  },
   瀧系: { origin: null, note: '以「瀧（泷）」命名的系列，刀、番、梗、枪、蛇等变体众多。' },
   羚系: { origin: null, note: '以「羚」命名的系列，含骑士、枪、蛇、照等变体。' },
   摩耶系: { origin: null, note: '以「摩耶」命名的系列，多与天空、裂空等意象组合。' },
@@ -106,6 +110,18 @@ export const IMPORTED = [
   ['仁天門', '仁天门', '門系'],
   ['仁王門', '仁王门', '門系'],
 
+  // ===== スネイク系（补自 サンダースネイク 页面的官方成员表）=====
+  ['おやすみスネイク', '晚安蛇', 'スネイク系'],
+  ['テラスネイク', '星晶蛇', 'スネイク系', null, { wiki: 'テラスネイク〈星晶蛇 ⧸太晶蛇〉' }],
+  ['シューティングスタースネイク', 'ShootingStar蛇', 'スネイク系', null, { wiki: 'シューティングスタースネイク〈ShootingStar蛇⧸陨星蛇〉' }],
+  ['迅速スネイク', '迅速蛇', 'スネイク系'],
+  ['迅スネ改', '迅速蛇改', 'スネイク系'],
+  ['サ終スネ', '停服蛇', 'スネイク系'],
+  ['永夜スネーク', '永夜蛇', 'スネイク系'],
+  ['野方スネイク', '野方蛇', 'スネイク系'],
+  ['凸スネ・鳳凰', '凸蛇·凤凰', 'スネイク系'],
+  ['ボルテックスネイク', 'vortex蛇', 'スネイク系'],
+
   // ===== 以下为未归入已知系列的技 =====
   ['霽', '霁'],
   ['殛雷', null],
@@ -138,7 +154,41 @@ export const IMPORTED = [
   ['ランサ・デ・ルソ', 'Lanza de Luz', null, null, { wiki: 'ランサ・デ・ルソ〈Lanza de Luz⧸光・枪〉' }],
   ['雷狼竜', '雷狼龙'],
   ['雷切丸', null],
-  ['サンダースネイク', '雷蛇'],
+  [
+    'サンダースネイク',
+    '雷蛇',
+    'スネイク系',
+    null,
+    {
+      creator: 'ばっくほーん〈BackHorn〉（改编）',
+      year: 2009,
+      aliases: ['サンスネ', 'SanSune', 'Thunder Snake'],
+      videos: [
+        {
+          kind: '本家',
+          performer: 'GinyuforcE',
+          time: '00:26',
+          title: '【全141种】ヲタ芸最后ノ技"超絶"大全集',
+          url: 'https://www.bilibili.com/video/BV14Z42147fx?t=26',
+        },
+        {
+          kind: '参考',
+          performer: '白狐〈はこ〉',
+          time: '00:06',
+          title: '【WOTA艺】ヲタ芸基本技連-疾走する閃光-【白狐】',
+          url: 'https://www.bilibili.com/video/BV1VydRYoEXo?t=6.3',
+        },
+        {
+          kind: '讲座',
+          performer: 'ギア〈Gear〉',
+          time: '入门',
+          title: '【ヲタ芸講座】サンダースネイク／基本＆応用',
+          url: 'https://youtu.be/IDStuN9abN0',
+        },
+      ],
+      pitfalls: '同一视频里 C 位是当前常见打法，后方两人打的是「六转雷蛇」变体，注意别混淆。',
+    },
+  ],
   ['雷霆の槍', '雷霆之枪'],
   ['黎明白刃', null],
   ['黎明藍鮫', '黎明蓝鲛', null, null, { wiki: '黎明藍鮫〈黎明蓝鲛⧸黎明蓝鲨〉' }],
@@ -175,7 +225,25 @@ export const IMPORTED = [
   ['乱刀·坠', null],
   ['乱菊', null],
   ['乱菊・限定解除', null],
-  ['ロマンス', '罗曼斯'],
+  [
+    'ロマンス',
+    '罗曼斯',
+    null,
+    null,
+    {
+      aliases: ['romance', 'Romance'],
+      videos: [
+        {
+          kind: '技连',
+          performer: 'GinyuforcE',
+          time: '18:36',
+          title: '【全141种】WOTA艺最后的技"超绝"大全集',
+          url: 'https://www.bilibili.com/video/BV14Z42147fx?t=1115.5',
+        },
+      ],
+      pitfalls: 'wiki 上作成者与年代均标注为「不明 / 未明年代」，来源已不可考。',
+    },
+  ],
   ['律', null],
   ['M.O.S!', null],
   ['メタトロン', '梅塔特隆'],

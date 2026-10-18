@@ -4,6 +4,7 @@ import BpmPanel from './components/BpmPanel.vue'
 import WazaPanel from './components/WazaPanel.vue'
 import FavoritesPanel from './components/FavoritesPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
+import InstallPrompt from './components/InstallPrompt.vue'
 
 const upcoming = [
   { icon: '🗺️', name: '全国光棒地图', desc: '收录各地界隈与活动场地，找同好、走圣地巡礼' },
@@ -18,6 +19,8 @@ const upcoming = [
       <h1>WOTA 工具箱</h1>
       <p class="sub">给打师的学习与练习助手 🐋</p>
     </header>
+
+    <InstallPrompt />
 
     <MetronomePanel />
 
