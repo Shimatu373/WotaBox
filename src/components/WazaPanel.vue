@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
-import { WAZA, SERIES_INFO, wikiUrl, allSeries } from '../data/waza.js'
+import { WAZA, SERIES_INFO, wikiUrl, allSeries, typeMeta } from '../data/waza.js'
 import {
   collections,
   statusMeta,
@@ -16,10 +16,34 @@ const expandedId = ref(null)
 
 const seriesList = computed(() => ['全部', ...allSeries()])
 
+// 「全部」时按系列归组，方便在几十个技里扫读
+const groupedFiltered = computed(() => {
+  const list = [...filtered.value]
+  const order = (w) => {
+    const i = seriesList.value.indexOf(w.series || '未分类')
+    return i === -1 ? 999 : i
+  }
+  list.sort((a, b) => order(a) - order(b))
+
+  const counts = {}
+  for (const w of list) {
+    const s = w.series || '未分类'
+    counts[s] = (counts[s] || 0) + 1
+  }
+
+  let last = null
+  return list.map((w) => {
+    const s = w.series || '未分类'
+    const showHead = s !== last
+    last = s
+    return { ...w, showHead, headName: s, seriesCount: counts[s] }
+  })
+})
+
 const filtered = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
   return WAZA.filter((w) => {
-    if (activeSeries.value !== '全部' && w.series !== activeSeries.value) return false
+    if (activeSeries.value !== '全部' && (w.series || '未分类') !== activeSeries.value) return false
     if (!kw) return true
     const haystack = [w.nameJa, w.nameRomaji, w.nameZh, w.series, ...(w.aliases || [])]
       .filter(Boolean)
@@ -72,8 +96,13 @@ function seriesMeta(name) {
 
     <p class="count">共 {{ filtered.length }} 条</p>
 
-    <ul v-if="filtered.length" class="list">
-      <li v-for="w in filtered" :key="w.id" class="item" :class="{ open: expandedId === w.id }">
+    <ul v-if="groupedFiltered.length" class="list">
+      <li v-for="w in groupedFiltered" :key="w.id" class="item" :class="{ open: expandedId === w.id, 'has-head': w.showHead }">
+        <div v-if="w.showHead" class="group-head">
+          <span class="group-name">{{ w.headName }}</span>
+          <span class="group-n">{{ w.seriesCount }} 个</span>
+        </div>
+
         <button class="row" type="button" :aria-expanded="expandedId === w.id" @click="toggle(w.id)">
           <span class="names">
             <span class="ja">{{ w.nameJa }}</span>
@@ -117,6 +146,16 @@ function seriesMeta(name) {
                   <dt>难度</dt>
                   <dd>{{ w.difficulty ? '★'.repeat(w.difficulty) : '待评定' }}</dd>
                 </div>
+                <div>
+                  <dt>技类型</dt>
+                  <dd>
+                    <span
+                      class="type-pill"
+                      :style="{ color: typeMeta(w.type).text, borderColor: typeMeta(w.type).color }"
+                      >{{ typeMeta(w.type).label }}</span
+                    >
+                  </dd>
+                </div>
               </dl>
 
               <div v-if="w.tags && w.tags.length" class="tags">
@@ -135,14 +174,6 @@ function seriesMeta(name) {
                     </span>
                   </li>
                 </ul>
-              </section>
-
-              <section class="block">
-                <h3>动作分解</h3>
-                <ol v-if="w.steps && w.steps.length" class="steps">
-                  <li v-for="(s, i) in w.steps" :key="i">{{ s }}</li>
-                </ol>
-                <p v-else class="empty">待补充 —— 在 <code>src/data/waza.js</code> 里填这个技的 <code>steps</code></p>
               </section>
 
               <section class="block">
@@ -222,9 +253,16 @@ function seriesMeta(name) {
 
 .chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   margin-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
 }
 
 .chip {
@@ -569,6 +607,46 @@ code {
   margin: 8px 0 0;
   font-size: 11px;
   color: #7f9ac0;
+}
+
+.item.has-head {
+  border-top: none;
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 2px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.item:first-child .group-head {
+  border-top: none;
+  padding-top: 2px;
+}
+
+.group-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #a8c4e6;
+  letter-spacing: 0.5px;
+}
+
+.group-n {
+  font-size: 10px;
+  color: #5f728c;
+  flex: none;
+}
+
+.type-pill {
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
 }
 
 .hint {
