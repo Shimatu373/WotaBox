@@ -1,5 +1,13 @@
 # WotaBox
 
+> 🌐 **在线使用**：<https://wotabox.pages.dev>
+> 📦 **安卓安装包**：<https://github.com/Shimatu373/WotaBox/releases>
+>
+> ⚠️ 本项目**不使用 GitHub Pages**。`*.github.io` 地址无法运行 —— 仓库里只有源码，
+> 能跑的产物需要 `npm run build` 生成，不在版本库里。
+
+给 wota 艺打师的学习与练习工具箱。
+
 给 wota 艺打师的学习与练习工具箱。纯前端、离线可用，所有数据都存在你自己的设备上。
 
 ## 功能
