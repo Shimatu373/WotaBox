@@ -1,5 +1,6 @@
 import { ref, shallowRef, onUnmounted } from 'vue'
 import { bpm as sharedBpm } from './sharedState.js'
+import { getAudioContext } from './sharedAudio.js'
 
 /**
  * 节拍器核心（Web Audio 前瞻调度）
@@ -52,10 +53,8 @@ export function useMetronome({ bpm: initialBpm = 120, countIn: initialCountIn = 
   }
 
   function ensureContext() {
-    if (!ctxRef.value) {
-      const AC = window.AudioContext || window.webkitAudioContext
-      ctxRef.value = new AC()
-    }
+    // 与音乐播放器共用同一个音频时钟，两者可以同时发声
+    ctxRef.value = getAudioContext()
     return ctxRef.value
   }
 
@@ -215,7 +214,7 @@ export function useMetronome({ bpm: initialBpm = 120, countIn: initialCountIn = 
     }
     const ctx = ctxRef.value
     if (ctx && ctx.state !== 'closed') {
-      ctx.close().catch(() => {})
+      // 共用上下文不在这里关闭，交给页面生命周期
     }
   })
 

@@ -1,4 +1,4 @@
-# WOTA 工具箱
+# WotaBox
 
 给 wota 艺打师的学习与练习助手。技术栈：Vue 3 + Vite（PWA）。
 
