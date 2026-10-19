@@ -69,6 +69,16 @@ node scripts/test-data.mjs   # 技数据完整性（重复 id / 非法类型）
 
 技数据中的名称与译名来自 [中文WOTA艺wiki](https://wotagei.huijiwiki.com/)，其余元数据由使用者补充。
 
+## 部署
+
+已部署在 Cloudflare Pages：<https://wotabox.pages.dev>
+
+```bash
+npm run deploy   # 构建并发布到 Cloudflare Pages
+```
+
+首次使用需要 `npx wrangler login` 授权一次。
+
 ## 待开发
 
 - 全国光棒地图
