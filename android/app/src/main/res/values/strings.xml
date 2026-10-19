@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">WotaBox</string>
+    <string name="title_activity_main">WotaBox</string>
+    <string name="package_name">com.shimatu.wotabox</string>
+    <string name="custom_url_scheme">com.shimatu.wotabox</string>
+</resources>
