@@ -7,6 +7,7 @@ import CollapsibleCard from './components/CollapsibleCard.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 
 const upcoming = [
+  { icon: '🎧', name: '音乐播放器', desc: '主歌 / 副歌 / C 段片段无缝循环，练习时不用反复解锁手机' },
   { icon: '🗺️', name: '全国光棒地图', desc: '收录各地界隈与活动场地，找同好、走圣地巡礼' },
   { icon: '🎬', name: '视频对比器', desc: '本地视频慢放 / 镜像 / 逐帧，纠正动作细节' },
   { icon: '💡', name: '你知道吗', desc: '光棒小知识合集' },
@@ -30,7 +31,7 @@ const upcoming = [
 
     <FavoritesPanel />
 
-    <CollapsibleCard id="upcoming" title="接下来" summary="3 项" :default-open="false">
+    <CollapsibleCard id="upcoming" title="接下来" summary="4 项" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
