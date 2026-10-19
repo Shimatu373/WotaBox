@@ -9,3 +9,7 @@ dist-ssr
 *.bak
 path-backup-*.txt
 
+# 打包产物与缓存
+*.apk
+__pycache__/
+*.pyc
