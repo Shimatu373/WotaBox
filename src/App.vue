@@ -1,6 +1,7 @@
 <script setup>
 import MetronomePanel from './components/MetronomePanel.vue'
 import PlayerPanel from './components/PlayerPanel.vue'
+import ChoreoPanel from './components/ChoreoPanel.vue'
 import BpmPanel from './components/BpmPanel.vue'
 import WazaPanel from './components/WazaPanel.vue'
 import FavoritesPanel from './components/FavoritesPanel.vue'
@@ -26,6 +27,8 @@ const upcoming = [
     <MetronomePanel />
 
     <PlayerPanel />
+
+    <ChoreoPanel />
 
     <BpmPanel />
 

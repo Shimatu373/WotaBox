@@ -1,5 +1,7 @@
 import { computed, onUnmounted, ref, shallowRef } from 'vue'
 import { getAudioContext, resumeAudio } from './sharedAudio.js'
+import { analyzeAudioBuffer } from './bpmAnalysis.js'
+import { bpm as sharedBpm } from './sharedState.js'
 
 /**
  * 音乐播放器（Web Audio 版）
@@ -35,7 +37,8 @@ export function useAudioPlayer() {
   const rate = ref(1)
   const loading = ref(false)
   const error = ref('')
-  const sections = ref([])
+  const bpmInfo = ref(null)
+  const bpmAnalyzing = ref(false)
 
   let source = null
   let startedAt = 0 // 开始播放时的 ctx.currentTime
@@ -46,31 +49,6 @@ export function useAudioPlayer() {
   const hasAudio = computed(() => !!buffer.value)
   const loopLen = computed(() => Math.max(0, loopB.value - loopA.value))
   const canLoop = computed(() => loopEnabled.value && loopLen.value > 0.2)
-
-  // ---------- 片段持久化 ----------
-  function storageKey() {
-    return `${STORE_PREFIX}${fileName.value}::${Math.round(duration.value)}`
-  }
-
-  function loadSections() {
-    try {
-      const raw = localStorage.getItem(storageKey())
-      const arr = raw ? JSON.parse(raw) : []
-      sections.value = Array.isArray(arr)
-        ? arr.filter((s) => s && typeof s.a === 'number' && typeof s.b === 'number' && typeof s.name === 'string')
-        : []
-    } catch {
-      sections.value = []
-    }
-  }
-
-  function persistSections() {
-    try {
-      localStorage.setItem(storageKey(), JSON.stringify(sections.value))
-    } catch {
-      /* 忽略 */
-    }
-  }
 
   // ---------- 载入 ----------
   async function load(file) {
@@ -88,7 +66,19 @@ export function useAudioPlayer() {
       loopA.value = 0
       loopB.value = Math.min(decoded.duration, 30)
       rate.value = 1
-      loadSections()
+      bpmInfo.value = null
+      bpmAnalyzing.value = true
+      // 让"分析中"先渲染出来，再做同步计算
+      await new Promise((r) => setTimeout(r, 20))
+      try {
+        const res = analyzeAudioBuffer(decoded)
+        bpmInfo.value = res
+        sharedBpm.value = Math.round(res.bpm)
+      } catch {
+        bpmInfo.value = null
+      } finally {
+        bpmAnalyzing.value = false
+      }
     } catch (e) {
       error.value = e?.message || '解码失败，换个文件试试'
     } finally {
@@ -103,7 +93,7 @@ export function useAudioPlayer() {
     duration.value = 0
     position.value = 0
     isPlaying.value = false
-    sections.value = []
+    bpmInfo.value = null
     error.value = ''
   }
 
@@ -209,14 +199,24 @@ export function useAudioPlayer() {
   }
 
   function setRate(r) {
-    const cur = computePosition()
-    rate.value = r
-    if (isPlaying.value) {
-      stopSource()
-      isPlaying.value = false
-      position.value = cur
-      play()
+    const v = Math.min(1.5, Math.max(0.5, Number(r) || 1))
+    if (Math.abs(v - rate.value) < 1e-6) return
+    if (isPlaying.value && source) {
+      // 不重启音源：重设基准点后直接改速率，播放位置保持连续，拖滑条不会卡顿
+      const pos = computePosition()
+      rate.value = v
+      startedAt = getAudioContext().currentTime
+      offsetAtStart = pos
+      source.playbackRate.value = v
+    } else {
+      rate.value = v
     }
+  }
+
+  /** 把某个 BPM 写进节拍器（候选值修正用） */
+  function applyBpm(b) {
+    if (b == null) return
+    sharedBpm.value = Math.min(220, Math.max(40, Math.round(Number(b))))
   }
 
   // ---------- A-B 点 ----------
@@ -251,36 +251,6 @@ export function useAudioPlayer() {
   function toggleLoop() {
     loopEnabled.value = !loopEnabled.value
     applyLoopToSource()
-  }
-
-  // ---------- 片段 ----------
-  function saveSection(name) {
-    if (loopLen.value < 0.5) return false
-    const item = {
-      id: 's' + Date.now().toString(36),
-      name: (name || '片段').trim() || '片段',
-      a: loopA.value,
-      b: loopB.value,
-    }
-    sections.value = [...sections.value, item]
-    persistSections()
-    return true
-  }
-
-  function applySection(id) {
-    const s = sections.value.find((x) => x.id === id)
-    if (!s) return
-    loopA.value = s.a
-    loopB.value = s.b
-    loopEnabled.value = true
-    applyLoopToSource()
-    if (isPlaying.value) seek(s.a)
-    else position.value = s.a
-  }
-
-  function deleteSection(id) {
-    sections.value = sections.value.filter((x) => x.id !== id)
-    persistSections()
   }
 
   // ---------- 屏幕常亮 ----------
@@ -321,12 +291,13 @@ export function useAudioPlayer() {
     loopB,
     loopEnabled,
     rate,
-    sections,
     loading,
     error,
     hasAudio,
     loopLen,
     canLoop,
+    bpmInfo,
+    bpmAnalyzing,
     // 操作
     load,
     reset,
@@ -340,9 +311,7 @@ export function useAudioPlayer() {
     nudgeA,
     nudgeB,
     toggleLoop,
-    saveSection,
-    applySection,
-    deleteSection,
+    applyBpm,
     fmtTime,
   }
 }
