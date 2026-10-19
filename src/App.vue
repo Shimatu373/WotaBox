@@ -5,6 +5,7 @@ import ChoreoPanel from './components/ChoreoPanel.vue'
 import BpmPanel from './components/BpmPanel.vue'
 import WazaPanel from './components/WazaPanel.vue'
 import FavoritesPanel from './components/FavoritesPanel.vue'
+import BackupPanel from './components/BackupPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 
@@ -35,6 +36,8 @@ const upcoming = [
     <WazaPanel />
 
     <FavoritesPanel />
+
+    <BackupPanel />
 
     <CollapsibleCard id="upcoming" title="接下来" summary="3 项" :default-open="false">
       <ul class="feat">
