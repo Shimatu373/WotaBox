@@ -160,16 +160,34 @@ function plain(text) {
 /** {{时间|45.2|2}} 里的秒数 -> "00:45" */
 function timeFromTemplate(text) {
   if (!text) return null
+  const raw = String(text)
   // 两种模板都要认：{{时间|45.2|2}} 和 {{时间链接|103.3|2|url}}
-  const m = String(text).match(/\{\{时间(?:链接)?\|([\d.]+)/)
+  const m = raw.match(/\{\{时间(?:链接)?\|([\d.]+)/)
   if (m) {
     const sec = Number(m[1])
     if (Number.isFinite(sec)) return fmtClock(sec)
   }
-  const t = plain(text)
+  // {{链接|09:34|url}} —— 有的词条直接写时刻，不写秒数
+  const m2 = raw.match(/\{\{链接\|(\d{1,2}:\d{2}(?::\d{2})?)/)
+  if (m2) return clockLiteral(m2[1])
+  const t = plain(raw)
   const mmss = t.match(/\d{1,2}:\d{2}/)
   if (mmss) return mmss[0]
-  return t || null
+  // 纯秒数 / "1分30秒" 也认；除此之外（「本家」「入门」这类占位说明）一律当没有时间，不许瞎填
+  const secOnly = t.match(/^(\d{1,3})$/)
+  if (secOnly) return fmtClock(Number(secOnly[1]))
+  const jp = t.match(/^(\d+)\s*分\s*(\d+)?\s*秒?$/)
+  if (jp) return fmtClock(Number(jp[1]) * 60 + Number(jp[2] || 0))
+  return null
+}
+
+/** "9:34" -> "09:34"；"1:02:03" -> "62:03" 这类统一成 mm:ss */
+function clockLiteral(str) {
+  const parts = str.split(':').map((x) => Number(x))
+  if (parts.some((n) => !Number.isFinite(n))) return str
+  if (parts.length === 2) return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`
+  if (parts.length === 3) return fmtClock(parts[0] * 3600 + parts[1] * 60 + parts[2])
+  return str
 }
 
 function fmtClock(t) {
@@ -200,9 +218,22 @@ function parseRef(inner) {
   const kind = plain(positional[0] || '')
   const performer = plain(positional[1] || '')
   const platform = plain(positional[2] || '')
-  const time = timeFromTemplate(positional[3] || named['4'] || '')
+  // 链接一般在具名参数 6=，但也有的词条直接当位置参数写（第 5、6 位）
+  let url = (named['6'] || '').trim()
+  if (!url) {
+    const inline = positional.slice(3).find((p) => /^https?:\/\//i.test((p || '').trim()))
+    if (inline) url = inline.trim()
+  }
+  let time = timeFromTemplate(positional[3] || named['4'] || '')
+  // 模板没写时间、但链接里带了 ?t=170（B站/YouTube 都表示起始秒数）——这是原文自带的信息
+  if (!time && url) {
+    const mt = url.match(/[?&]t=([\d.]+)/)
+    if (mt) {
+      const sec = Number(mt[1])
+      if (Number.isFinite(sec)) time = fmtClock(sec)
+    }
+  }
   const title = plain(positional[4] || named['5'] || '')
-  const url = (named['6'] || '').trim()
   const year = (named['时间'] || '').trim()
   const note = plain(named['7'] || '')
 
@@ -234,9 +265,9 @@ function parsePage(raw) {
     if (key) fields[key] = val
   }
 
-  // 本家视频 + 「以外视频」都要收
+  // 本家视频 + 「以外视频」+「其他视频」/「使用视频」都要收（几种字段名 wiki 都在用）
   const videos = []
-  for (const src of [fields['视频'], fields['以外视频']]) {
+  for (const src of [fields['视频'], fields['以外视频'], fields['其他视频'], fields['使用视频']]) {
     if (!src) continue
     for (const block of getTemplates(src, '参考')) {
       const v = parseRef(block)
@@ -247,9 +278,18 @@ function parsePage(raw) {
   const tags = [...raw.matchAll(/\[\[(?:分类|Category):([^\]|]+)\]\]/g)].map((m) => m[1].trim())
   if (String(fields['国人技'] || '').includes('是')) tags.push('国人技')
 
-  const creator = plain(fields['作成者'] || '') || null
+  let creator = plain(fields['作成者'] || '') || null
   let origin = plain(fields['本家'] || '') || null
   if (origin === '同上') origin = creator
+
+  // 变体词条的写法：|人物=原版作成者 |作成者=原版作者 |身份=版本创编者 |本家=该版本作者
+  // 例：流星スネイク ギアver 的作成者是 Rask（原版），真正做这个版本的是 Gear。
+  // 不处理的话「ギアver」会被标成 Rask 的作品 —— 那是错的。
+  if (origin && /版本创编/.test(plain(fields['身份'] || ''))) {
+    const originalAuthor = creator
+    creator = origin
+    origin = originalAuthor
+  }
 
   // 年份：词条顶层的 |时间= 最准，其次用视频里的发布时间
   const yearFromField = (plain(fields['时间'] || '').match(/\d{4}/) || [])[0]
@@ -258,7 +298,10 @@ function parsePage(raw) {
     .find(Boolean)
   const year = Number(yearFromField || yearFromVideo) || null
 
-  const readings = [plain(fields['读音'] || ''), plain(fields['音'] || '')].filter(Boolean)
+  // 读音类字段：读音 / 音 / 注音（注音有时写罗马字，正好当搜索别名）
+  const readings = [plain(fields['读音'] || ''), plain(fields['音'] || ''), plain(fields['注音'] || '')].filter(
+    Boolean,
+  )
 
   return {
     creator,
@@ -319,7 +362,9 @@ function main() {
       skip++
       continue
     }
-    const nameJa = title.split('〈')[0].trim()
+    // nameJa 默认取标题〈〉前的部分；个别词条标题与技名不一致（如 wiki 写「半蔵門」、我们收「半藏門」），
+    // 用记录里的 name 字段显式指定，否则元数据会静默匹配不上。
+    const nameJa = String(item.name || title.split('〈')[0]).trim()
     meta[nameJa] = parsePage(raw)
     ok++
   }
