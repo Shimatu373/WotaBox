@@ -72,7 +72,7 @@
 
 | 项 | 值 |
 |---|---|
-| 提交数 | **45**（本轮提交后同步） |
+| 提交数 | **53**（远程已同步，工作区干净） |
 | 线上 | <https://wotabox.pages.dev> —— **已部署 v0.9.0**（Production，commit c1d7e59） |
 | APK | **`v0.9.0` 已发布到 GitHub Releases**：`WotaBox-0.9.0.apk`（4.44 MB、versionCode 9、正式签名）→ <https://github.com/Shimatu373/WotaBox/releases/tag/v0.9.0> |
 | 签名 | `keystore/wotabox-release.jks`（PKCS12 / RSA 4096 / 36500 天，别名 `wotabox`）；证书 SHA-256 `E7:54:C3:C0:F4:87:80:38:60:34:46:E7:B6:82:03:BE:8A:4B:1D:9B:46:77:57:CE:F2:40:F4:3E:1F:21:CA:2F` |
@@ -168,3 +168,19 @@ node scripts/test-tap.mjs          # 点拍逻辑验收
 python scripts/gen-icons.py        # 重新生成 PWA 图标
 python scripts/gen-android-icons.py # 重新生成安卓图标/启动图
 ```
+
+---
+
+## 八、收工状态（2026-10-21 23:58）
+
+今晚到这里，工作区干净、远程已同步。
+
+| 项 | 状态 |
+|---|---|
+| 技数据 | 619 技 / 52 系列；556 有作成者、542 有视频；未分类 330（清单已导出给社团） |
+| 线上 | <https://wotabox.pages.dev> = v0.9.0 |
+| APK | GitHub Release `v0.9.0`（`WotaBox-0.9.0.apk`，4.44 MB，正式签名） |
+| 首屏 | 主包 197 KB（gzip 76 KB），详情分块按需加载 |
+| 下次开工 | 等社团的「建议系列」表回来 → 写入 `series-auto.js`；难度/技类型继续按主人查证录入 |
+
+**别忘了那个约定**（第六节第 4 条）—— 现在这个包已经有资格发给人了。
