@@ -2,7 +2,11 @@
  * 把 wiki 词条的原始模板文本解析成结构化元数据
  *
  * 输入：data/wiki-raw.jsonl，每行 {"title":"页面标题","raw":"{{技|原=...|中=...|...}}"}
- * 输出：src/data/wiki-meta.json，形如
+ * 输出：
+ *   src/data/wiki-meta/lite.js      技名 → 读音别名（随主包，用于搜索）
+ *   src/data/wiki-meta/index.js     技名 → 分块号
+ *   src/data/wiki-meta/chunk-N.js   详情分块（作成者/视频/要点），按需动态加载
+ *   src/data/wiki-meta/loaders.js   分块加载器表
  *   { "蒼月剣舞": { creator, origin, year, videos: [...], pitfalls, tags, seriesJa } }
  *
  * 词条模板长这样（action=raw 拿到的原文）：
@@ -20,14 +24,15 @@
  * 用法：node scripts/import-wiki-raw.mjs
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ROOT = dirname(HERE)
 const RAW_FILE = join(ROOT, 'data', 'wiki-raw.jsonl')
-const OUT_FILE = join(ROOT, 'src', 'data', 'wiki-meta.js')
+/** 旧的整包产物：现在改成 src/data/wiki-meta/ 下的分块，这个文件只在清理时用 */
+const META_FILE_OLD = join(ROOT, 'src', 'data', 'wiki-meta.js')
 
 /** 按顶层分隔符切分，跳过 {{...}} 和 [[...]] 内部 */
 function splitTopLevel(text, sep = '|') {
@@ -399,20 +404,75 @@ function main() {
     ok++
   }
 
-  mkdirSync(dirname(OUT_FILE), { recursive: true })
-  const body =
+  // ---- 输出 ----
+  // 详情字段（作成者/视频/要点…）只在展开某个技时才需要，全部塞进主包会把首屏撑到 400KB+。
+  // 所以拆成：lite（搜索用的读音别名）+ 32 个按需 chunk（动态 import 才下载）。
+  const META_DIR = join(ROOT, 'src', 'data', 'wiki-meta')
+  mkdirSync(META_DIR, { recursive: true })
+
+  const CHUNKS = 32
+  const hash = (s) => {
+    let h = 0
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+    return h % CHUNKS
+  }
+
+  const buckets = Array.from({ length: CHUNKS }, () => ({}))
+  const index = {}
+  const lite = {}
+  for (const name of Object.keys(meta)) {
+    const id = hash(name)
+    buckets[id][name] = meta[name]
+    index[name] = id
+    const readings = meta[name].readings || []
+    if (readings.length) lite[name] = readings
+  }
+
+  const header = (what) =>
     '/**\n' +
     ' * 自动生成：node scripts/import-wiki-raw.mjs —— 请勿手改\n' +
     ' * 数据来源：中文WOTA艺wiki 词条原文（action=raw）\n' +
-    ' */\n' +
-    `export const WIKI_META = ${JSON.stringify(meta, null, 2)}\n\n` +
-    'export default WIKI_META\n'
-  writeFileSync(OUT_FILE, body, 'utf8')
+    ` * ${what}\n` +
+    ' */\n'
+
+  for (let i = 0; i < CHUNKS; i++) {
+    writeFileSync(join(META_DIR, `chunk-${i}.js`), header(`详情分块 ${i}（按需加载）`) + `export default ${JSON.stringify(buckets[i], null, 0)}\n`, 'utf8')
+  }
+  // 显式的动态 import 表：比 `import(`chunk-${id}.js`)` 更好，打包器能静态分析、不会给出警告
+  writeFileSync(
+    join(META_DIR, 'loaders.js'),
+    header('分块加载器：每个分块一个动态 import，只有用到时才下载') +
+      'export const LOADERS = {\n' +
+      Array.from({ length: CHUNKS }, (_, i) => `  ${i}: () => import('./chunk-${i}.js'),`).join('\n') +
+      '\n}\n\n' +
+      'export default LOADERS\n',
+    'utf8',
+  )
+  writeFileSync(
+    join(META_DIR, 'index.js'),
+    header('技名 → 分块号。只放这个映射，保证主包不被详情撑大') +
+      `export const WIKI_CHUNKS = ${JSON.stringify(index, null, 0)}\n\n` +
+      'export default WIKI_CHUNKS\n',
+    'utf8',
+  )
+  writeFileSync(
+    join(META_DIR, 'lite.js'),
+    header('搜索用：技名 → 读音别名（体积很小，随主包一起加载）') +
+      `export const WIKI_LITE = ${JSON.stringify(lite, null, 0)}\n\n` +
+      'export default WIKI_LITE\n',
+    'utf8',
+  )
+
+  // 旧的整包文件已废弃，删掉避免有人误引
+  if (existsSync(META_FILE_OLD)) rmSync(META_FILE_OLD)
 
   console.log(`解析成功 ${ok} 条，跳过 ${skip} 条`)
-  console.log(`已写入 ${OUT_FILE}`)
+  console.log(`已写入 ${META_DIR}\\chunk-0..${CHUNKS - 1}.js + index.js + lite.js`)
+  console.log(`  每块约 ${Math.round(Object.keys(meta).length / CHUNKS)} 条；有读名的 ${Object.keys(lite).length} 条`)
 
-  for (const [k, v] of Object.entries(meta)) {
+  // 抽样打印，避免刷屏
+  const sample = Object.entries(meta).slice(0, 12)
+  for (const [k, v] of sample) {
     const vids = v.videos.map((x) => `${x.time || '?'}`).join(',')
     console.log(`  ${k.padEnd(18)} 作成者:${(v.creator || '—').padEnd(14)} 年份:${String(v.year || '—').padEnd(5)} 视频:${vids || '—'}`)
   }

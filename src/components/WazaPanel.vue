@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
 import DifficultyBar from './DifficultyBar.vue'
 import { WAZA, SERIES_INFO, wikiUrl, allSeries, typeMeta } from '../data/waza.js'
+import { loadWazaDetail } from '../data/wiki-detail.js'
 import { DIFFICULTY_DEF, DIFFICULTY_ORDER, difficultyMeta } from '../data/difficulty.js'
 import {
   collections,
@@ -72,6 +73,30 @@ const filtered = computed(() => {
 })
 
 const summary = computed(() => `${WAZA.length} 个技 · ${allSeries().length} 个系列`)
+
+// 详情（作成者 / 参考视频 / 要点）按需加载：点开某个技时才拉它那一块
+const details = reactive({})
+const detailLoading = ref(null)
+
+function detailOf(w) {
+  return details[w.nameJa] === undefined ? null : details[w.nameJa]
+}
+
+async function ensureDetail(w) {
+  if (!w || details[w.nameJa] !== undefined) return
+  detailLoading.value = w.nameJa
+  try {
+    details[w.nameJa] = await loadWazaDetail(w.nameJa)
+  } finally {
+    if (detailLoading.value === w.nameJa) detailLoading.value = null
+  }
+}
+
+watch(expandedId, (id) => {
+  if (!id) return
+  const w = WAZA.find((x) => x.id === id)
+  if (w) ensureDetail(w)
+})
 
 function toggle(id) {
   expandedId.value = expandedId.value === id ? null : id
@@ -172,21 +197,21 @@ function seriesMeta(name) {
                   <dt>系列</dt>
                   <dd>{{ w.series }}</dd>
                 </div>
-                <div v-if="w.creator">
+                <div v-if="detailOf(w)?.creator">
                   <dt>作成者</dt>
-                  <dd>{{ w.creator }}</dd>
+                  <dd>{{ detailOf(w).creator }}</dd>
                 </div>
-                <div v-else-if="w.origin">
+                <div v-else-if="detailOf(w)?.origin">
                   <dt>本家</dt>
-                  <dd>{{ w.origin }}</dd>
+                  <dd>{{ detailOf(w).origin }}</dd>
                 </div>
-                <div v-if="w.creator && w.origin && w.origin !== w.creator">
+                <div v-if="detailOf(w)?.creator && detailOf(w)?.origin && detailOf(w).origin !== detailOf(w).creator">
                   <dt>本家</dt>
-                  <dd>{{ w.origin }}</dd>
+                  <dd>{{ detailOf(w).origin }}</dd>
                 </div>
-                <div v-if="w.year">
+                <div v-if="detailOf(w)?.year">
                   <dt>年份</dt>
-                  <dd>{{ w.year }}</dd>
+                  <dd>{{ detailOf(w).year }}</dd>
                 </div>
                 <div>
                   <dt>八拍数</dt>
@@ -213,14 +238,16 @@ function seriesMeta(name) {
                 </div>
               </dl>
 
-              <div v-if="w.tags && w.tags.length" class="tags">
-                <span v-for="t in w.tags" :key="t" class="tag">{{ t }}</span>
+              <div v-if="detailOf(w)?.tags?.length" class="tags">
+                <span v-for="t in detailOf(w).tags" :key="t" class="tag">{{ t }}</span>
               </div>
 
-              <section v-if="w.videos && w.videos.length" class="block">
+              <p v-if="detailLoading === w.nameJa && !detailOf(w)" class="detail-loading">正在读取 wiki 元数据…</p>
+
+              <section v-if="detailOf(w)?.videos?.length" class="block">
                 <h3>参考视频</h3>
                 <ul class="videos">
-                  <li v-for="(v, i) in w.videos" :key="i">
+                  <li v-for="(v, i) in detailOf(w).videos" :key="i">
                     <span class="vkind">{{ v.kind }}</span>
                     <a :href="v.url" target="_blank" rel="noopener noreferrer">{{ v.title }}</a>
                     <span class="vmeta">
@@ -251,9 +278,9 @@ function seriesMeta(name) {
                 </p>
               </section>
 
-              <section v-if="w.pitfalls" class="block">
+              <section v-if="detailOf(w)?.pitfalls" class="block">
                 <h3>要点 / 常见失误</h3>
-                <p class="pitfall">{{ w.pitfalls }}</p>
+                <p class="pitfall">{{ detailOf(w).pitfalls }}</p>
               </section>
 
               <a
@@ -389,6 +416,12 @@ function seriesMeta(name) {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.detail-loading {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #5f728c;
 }
 
 .list {

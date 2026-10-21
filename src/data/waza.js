@@ -30,7 +30,7 @@
 import { IMPORTED, IMPORTED_SERIES } from './waza-imported.js'
 import { WIKI_ADDED, WIKI_ADDED_TITLES } from './waza-wiki-extra.js'
 import { SERIES_AUTO, SERIES_AUTO_INFO } from './series-auto.js'
-import WIKI_META from './wiki-meta.js'
+import { WIKI_LITE } from './wiki-meta/lite.js'
 import { DIFFICULTY } from './difficulty.js'
 
 /** 技类型定义 */
@@ -298,29 +298,30 @@ const ALL_ROWS = [
 ]
 
 export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) => {
-  // wiki 批量导入的元数据（scripts/import-wiki-raw.mjs 生成）作为兜底
-  // 手写 extra 里显式写过的字段优先，不会被覆盖
-  const meta = WIKI_META[nameJa] || {}
+  // ⚠️ 这里**不再**读整包 wiki 元数据：详情字段（作成者/视频/要点）拆进了
+  // src/data/wiki-meta/chunk-*.js，用 loadWazaDetail(nameJa) 按需加载。
+  // 主包只保留搜索需要的读音别名（WIKI_LITE，很小）。
+  const readings = WIKI_LITE[nameJa] || []
 
   return {
     id: extra.id || hashId(nameJa),
     nameJa,
     nameZh: nameZh || null,
-    nameRomaji: extra.nameRomaji || meta.nameRomaji || null,
-    aliases: extra.aliases?.length ? extra.aliases : meta.readings || [],
+    nameRomaji: extra.nameRomaji || null,
+    aliases: extra.aliases?.length ? extra.aliases : readings,
     // 系列：手写 ROWS > 显式覆盖表 > wiki 系列名自动成组 > 行内声明
     series: SERIES_OVERRIDE[nameJa] || SERIES_AUTO[nameJa] || series || null,
     type: type || null,
-    creator: meta.creator || extra.creator || null,
-    // 本家（原版作者）。变体词条里它和作成者不是同一个人，UI 上分开显示
-    origin: meta.origin || extra.origin || null,
-    year: meta.year || extra.year || null,
+    // 手写在 ROWS 里的作成者/视频仍然直接可用；wiki 来的要按需加载
+    creator: extra.creator || null,
+    origin: extra.origin || null,
+    year: extra.year || null,
     bars: extra.bars ?? null,
-    tags: extra.tags?.length ? extra.tags : meta.tags || [],
-    videos: (meta.videos?.length || 0) > (extra.videos?.length || 0) ? meta.videos : extra.videos || [],
+    tags: extra.tags || [],
+    videos: extra.videos || [],
     // 与 wiki 词条标题约定一致：日文名〈中文译名〉
     wiki: extra.wiki || (nameZh ? `${nameJa}〈${nameZh}〉` : nameJa),
-    pitfalls: extra.pitfalls || meta.pitfalls || '',
+    pitfalls: extra.pitfalls || '',
     // 难度：waza.js 里手写 > difficulty.js 的核定表 > 待评定（null）
     difficulty: extra.difficulty ?? DIFFICULTY[nameJa] ?? null,
   }

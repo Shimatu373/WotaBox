@@ -19,7 +19,9 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { WAZA } from '../src/data/waza.js'
 import { SERIES_AUTO } from '../src/data/series-auto.js'
-import WIKI_META from '../src/data/wiki-meta.js'
+import { loadAllMeta } from './lib-wiki-meta.mjs'
+
+const WIKI_META = await loadAllMeta()
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const OUT_JS = join(ROOT, 'src', 'data', 'series-auto.js')
