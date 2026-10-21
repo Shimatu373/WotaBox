@@ -32,7 +32,7 @@
 | 音乐播放器 | ✅ 无缝 A-B 循环、0.5–1.5× 变速、导入自动识别 BPM | `components/PlayerPanel.vue` |
 | 编排 | ✅ 歌曲片段 × 有序副歌技，可复制文本 | `components/ChoreoPanel.vue` |
 | BPM 测试 | ✅ 自动分析（自相关）+ 手动点拍 | `components/BpmPanel.vue` |
-| 技图鉴 | ✅ 275 技 / 14 系列，搜索、筛选、分组、跳 wiki、**难度色条** | `components/WazaPanel.vue` |
+| 技图鉴 | ✅ **619 技 / 52 系列**，搜索、筛选（系列+难度）、分组、跳 wiki、**难度色条** | `components/WazaPanel.vue` |
 | 难度分级 | ✅ 四档（基础绿/进阶黄/专家红/大师紫）+ 待评定灰条，显示在每条技名后 | `data/difficulty.js` + `components/DifficultyBar.vue` |
 | 收藏夹 | ✅ 自定义分组 + 三档掌握状态 | `components/FavoritesPanel.vue` |
 | 个人技池 | ✅ 只读汇总视图（金=已上手，蓝=已习得） | 同上，模式切换 |
@@ -78,13 +78,35 @@ web_fetch action=raw  →  data/wiki-raw.jsonl（累积，可重复解析）
 **常用命令**
 
 ```powershell
-node scripts/wiki-missing-urls.mjs スネイク系   # 列出该系列还缺元数据的技 + 生成 action=raw 地址
-node scripts/merge-wiki-raw.mjs data/xxx.txt   # @@PAGE@@ 分块文本 → data/wiki-raw.jsonl（可重复跑）
+# ① 浏览器导出（绕开 Cloudflare 403，见下）
+#    在 wiki 页面 F12 → Console 粘贴 docs/bulk-fetch-wiki.js → 下载 wiki-pages.json → 放到 data/
+node scripts/absorb-wiki-json.mjs              # 导出的 JSON → 并入 wiki-raw.jsonl
+node scripts/clean-wiki-raw.mjs                # 去测试页、去「同一技多个标题」重复
+node scripts/qa-wiki-raw.mjs                   # 入库前校验：标题↔正文错配、重复、空 raw
+
+# ② 单页补抓（少量缺漏时）
+node scripts/wiki-missing-urls.mjs スネイク系   # 某系列缺哪些 + 生成 action=raw 地址
+node scripts/merge-wiki-raw.mjs data/xxx.txt   # @@PAGE@@ 分块文本 → wiki-raw.jsonl
+
+# ③ 生成与归类
+node scripts/gen-wiki-rows.mjs                 # 新词条 → src/data/waza-wiki-extra.js（自动 ROWS）
 node scripts/import-wiki-raw.mjs               # 解析 jsonl → wiki-meta.js
-node scripts/report-meta.mjs                   # 覆盖率报告：按系列统计作成者/视频缺口
-node scripts/test-data.mjs                     # 校验重复 id / 非法类型
+node scripts/propose-series.mjs                # 用 wiki「系列名」半自动归类 → series-auto.js + 提案 md
+node scripts/diff-cat-list.mjs                 # 分类清单 vs 图鉴，还缺哪些
+node scripts/report-meta.mjs                   # 覆盖率报告
+node scripts/test-data.mjs                     # 数据校验（含难度档名校验）
+
 npm run build && npm run deploy                # 构建并发布
 ```
+
+**⚠️ Cloudflare 403（2026-10-21 查实，别再浪费时间试本地抓）**
+
+- wiki 站对**任何本地脚本**一律 403，页面是「请稍候…」挑战页；带全套浏览器指纹头没用
+- `cf_clearance` 是 **HttpOnly**，浏览器控制台 `document.cookie` 读不到它；
+  DevTools 的「Copy as cURL」也常常不带 `Cookie:` 头
+- **唯一稳的路**：在 wiki 页面里跑 `docs/bulk-fetch-wiki.js`（同源 fetch 自带会话），
+  导出 JSON 后由本地脚本离线入库 —— 正文不经过模型，token 成本≈0
+- 直接走 web_fetch 抓单页也能通（每次约 350–450 token），少量补漏时才用
 
 **分块文件的写法**（`merge-wiki-raw.mjs` 的输入）：
 
@@ -120,29 +142,22 @@ npm run build && npm run deploy                # 构建并发布
 - 中文名字段有 `中=` 也有 `中文名=`；`拼音`/`拼` 不是读音，别混
 - `|身份=版本创编者` 等字段可能和 `时间` 并存，解析时按字段名取，不看顺序
 
-**当前进度（2026-10-21 扫完）**：275 技中 **248 有作成者、231 有视频**，wiki 命中 **258 条词条**。
-14 个系列 + 未分类全部扫过一遍，**剩下的 27 条是 wiki 本身没数据，别再重复抓**。
+**当前进度（2026-10-21 全量导入后）**：**619 技 / 52 系列**，wiki 词条命中 **616 条**；
+**556 有作成者（90%）、542 有视频（88%）**；未分类 330 条。
 
-**这 27 条为什么空着**（不是漏抓）：
+> 这一轮把「分类:技」的 618 个页面全拉下来了（= 我们之前只有 278 个）。
+> 未分类从 123 涨到 330 是正常的：新进来的技大多还没归类，
+> 而自动归类只认「组内 ≥2 条」，大量技是独苗。
+
+**旧数字（第一轮扫完时）**：275 技中 248 有作成者、231 有视频。
+14 个系列 + 未分类全部扫过一遍，剩下的 27 条是 wiki 本身没数据，别再重复抓：
 
 | 原因 | 条目 |
 |---|---|
-| 页面 404，wiki 根本没有 | 満月雕弓、ライザー、長安門、北斗·天枢、北斗·天璇、北斗·天玑、北斗·天权、北斗·玉衡、掴み虚閃、掴み虚閃・帰刃 |
+| 页面 404，wiki 根本没有 | 満月雕弓、ライザー、長安門、北斗·天枢/天璇/天玑/天权/玉衡、掴み虚閃、掴み虚閃・帰刃 |
 | 页面存在但只有名字 | AXISnake、ガブリエル、蒼月剣斬（空页） |
 | 页面写了别的东西、没写作成者 | ムラサメ（只有读音和趣闻） |
-| 只写了本家、没写作成者 | 流月赋 / 流月歌 / 流月诗 / 流月アンタレス（本家=狱祠，详情页显示「本家」）、サ終スネ（本家=Makki）、永夜スネーク、凸スネ・鳳凰 |
-
-| 系列 | 作成者/总数 | 说明 |
-|---|---|---|
-| スネイク系 | 25/29 | 4 条 wiki 未给作成者 |
-| 瀧系 / 羚系 / 摩耶系 / 烈剣系 / 乖離系 / 神威系 | 全齐 | 13/13 · 11/11 · 6/6 · 6/6 · 8/8 · 4/4 |
-| 金剛系 / 霹靂一閃系 | 3/3 · 2/2 | 全齐 |
-| 門系 | 11/12 | `長安門` 页面不存在 |
-| 蒼月剣系 | 8/9 | `蒼月剣斬` 页面为空 |
-| 虚閃系 | 2/4 | `掴み虚閃` 两条页面不存在 |
-| 北斗系 | 1/6 | 只有「北斗」本体有条目 |
-| 流月系 | 1/5 | 全是「本家 狱祠」，无作成者 |
-| 未分类 | 147/157 | 已扫完，剩 10 条属于上表三种原因 |
+| 只写了本家、没写作成者 | 流月赋/歌/诗/アンタレス（本家=狱祠）、サ終スネ（Makki）、永夜スネーク、凸スネ・鳳凰 |
 
 **大批量抓取的做法**（156 条一次扫完的经验）
 
@@ -164,6 +179,9 @@ npm run build && npm run deploy                # 构建并发布
 | `write` 工具报 `ReplaceFileW EIO` | 文件被占用。改用 pwsh `FileStream` + **必须 `SetLength(0)`**，否则旧内容尾部残留 → 曾导致构建失败 |
 | `import ... from './x.json'` | 纯 Node 需要 import attribute。**改成生成 `.js` 模块** |
 | 批量抓取靠「复制粘贴」 | 100+ 条会掏空上下文且必然抄错。拆给子代理写盘 + `qa-wiki-raw.mjs` 校验标题↔正文 + 抽样重抓比对，三者缺一不可 |
+| 生成脚本「自噬」 | `gen-wiki-rows` / `propose-series` 的产物会被 `waza.js` 消费，第二次运行会把「自己上一轮写的」当成「已经有的」→ 把文件清空。**凡是产物回流进数据的脚本，都必须把自己上一轮的产物视为未处理**（两个脚本都踩过） |
+| 简繁两套系列名 | `鹤望兰系` / `鶴望蘭系` 会被当成两个系列。分组前先做一次简繁折叠（只用于比较，显示用出现多的那种写法） |
+| 彩色文字模板污染字段 | 有个「系列名」在 wiki 上是用 `<span style>` 堆出来的，不剥 HTML 就会在系列列表里出现一长串标签 |
 | Vite 隧道域名 403 | `server.allowedHosts` / `preview.allowedHosts` 要放行 `.trycloudflare.com` |
 | README 被旧编辑器缓冲覆盖 | 提交前看 `git status`，被覆盖就从 git 恢复 |
 | 重复声明（`WAZA` / `wazaMap`） | 改组件前先 `grep` 确认已有什么 |

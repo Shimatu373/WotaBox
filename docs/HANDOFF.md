@@ -73,7 +73,7 @@
 | APK | `v0.8.0` **已打本地签名包**：`android\app\build\outputs\apk\release\app-release.apk`（4.32 MB、versionCode 8）；**还没发到 GitHub Releases**；数据在打完包后又有更新，发布前需重打 |
 | 签名 | `keystore/wotabox-release.jks`（PKCS12 / RSA 4096 / 36500 天，别名 `wotabox`）；证书 SHA-256 `E7:54:C3:C0:F4:87:80:38:60:34:46:E7:B6:82:03:BE:8A:4B:1D:9B:46:77:57:CE:F2:40:F4:3E:1F:21:CA:2F` |
 | 环境变量 | ✅ `JAVA_HOME` / `ANDROID_HOME` / `GRADLE_USER_HOME` 已 `setx` 永久化 |
-| 技数据 | 275 技 / 14 系列；**248 个有作成者、231 个有视频**（wiki 命中 258 条词条）。剩 27 条是 wiki 本身没数据，清单见 PROJECT-MEMORY 第四节 |
+| 技数据 | **619 技 / 52 系列**；556 个有作成者（90%）、542 个有视频（88%）；wiki 词条命中 616 条。未分类 330 条（自动归类只认「组内 ≥2 条」） |
 | 难度 | 四档色条已上线；已核定 3 条（金剛系）＝ 基础 2 / 进阶 1，**其余 272 条待评定**（数据在 `src/data/difficulty.js`） |
 | Context Windows 插件 | `dsh-context-windows@0.1.3` 已装、`contextTokens` 已调到 163840；**但 cordis 预设下不生效**（见第四节 3） |
 
@@ -106,6 +106,8 @@
 | **P0** | ~~环境变量永久化~~ | ✅ 已 `setx`，见第一节 |
 | **P1** | 把 `v0.8.0` 传到 GitHub Releases | 本地包已就绪：`android\app\build\outputs\apk\release\app-release.apk`；记得在说明里写「旧 debug 版需卸载重装」 |
 | **P1** | ~~继续补元数据~~ | ✅ 2026-10-21 全部扫完：14 个系列 + 未分类 156 条；275 技中 248 有作成者。剩下 27 条是 wiki 本身无数据，别再重复抓（清单见 PROJECT-MEMORY 第四节） |
+| **P1** | ~~把「分类:技」全量导入~~ | ✅ 2026-10-21 完成：浏览器导出 618 页 → 入库 616 条，技 278 → **619**；系列 25 → 52 |
+| **P1** | 未分类 330 条继续归类 | 自动归类（`propose-series.mjs`）只认 wiki 系列名且组内 ≥2 条。剩下的要么 wiki 没写系列名，要么是独苗，需要人工判断——这是接下来最占时间的活 |
 | **P1** | 难度分级继续录入 | 现在只有金剛系 3 条，其余 272 条待评定。录入只需往 `src/data/difficulty.js` 的 `DIFFICULTY` 表加行（键＝日文名），值只能是 `basic`/`advanced`/`expert`/`master`，写错会被 `test-data.mjs` 拦下 |
 | **P1** | Cloudflare Pages 接 Git 自动部署 | 现在 push 后还得手动 `npm run deploy` |
 | **P2** | 「你知道吗」板块 | 纯内容，最快出成果 |
@@ -145,6 +147,13 @@ cd android; .\gradlew.bat assembleRelease    # 产物 app\build\outputs\apk\rele
 & "D:\Android\sdk\build-tools\36.0.0\apksigner.bat" verify --print-certs app\build\outputs\apk\release\app-release.apk
 
 node scripts/wiki-missing-urls.mjs 羚系  # 某系列缺哪些元数据 + 可直接抓取地址
+# 全量/增量导入（绕开 Cloudflare 403 的正路）：
+#   1) wiki 页面 F12 → Console 粘贴 docs/bulk-fetch-wiki.js → 下载 wiki-pages.json
+#   2) 放到 data/wiki-pages.json，然后：
+node scripts/absorb-wiki-json.mjs  # 导出 JSON → wiki-raw.jsonl
+node scripts/clean-wiki-raw.mjs    # 去测试页 + 去「同技多标题」重复
+node scripts/gen-wiki-rows.mjs     # 新技 → waza-wiki-extra.js（自动 ROWS）
+node scripts/propose-series.mjs    # 用 wiki 系列名半自动归类
 node scripts/merge-wiki-raw.mjs <分块文件>  # 抓回来的原文并入 wiki-raw.jsonl
 node scripts/qa-wiki-raw.mjs       # 入库前校验：标题↔正文是否错配、重复、空 raw
 node scripts/import-wiki-raw.mjs   # wiki 原文 → wiki-meta.js
