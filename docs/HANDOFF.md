@@ -45,6 +45,9 @@
 | **（第二场）正式签名** | ✅ 新 keystore `wotabox-release.jks`（RSA 4096 / 36500 天 / PKCS12）+ `build.gradle` 签名配置（凭据从 `keystore.properties` 读，文件不存在时降级不签名） |
 | **（第二场）v0.8.0 签名包** | ✅ 4.32 MB、versionCode 8、versionName 0.8.0、apksigner v2 验证通过（**尚未上传 Release**） |
 | **（第二场）插件体检** | ✅ 查清 Context Windows 在 cordis 预设下 `inactive`、九个工具全不挂载（详见第四节 3） |
+| **（第三场）6 个系列元数据补齐** | ✅ スネイク系 29/29、門系 11/12、瀧系 13/13、金剛系 3/3、霹靂一閃系 2/2、虚閃系 2/4；**有作成者 20→64、有视频 23→57**（wiki 命中 63 条） |
+| **（第三场）解析器又修 5 个坑** | ✅ `{{链接|09:34}}`、URL 占位置参数、占位文字被当时间、变体作成者归属、标题≠技名映射（详见第五节） |
+| **（第三场）新增 3 个流水线脚本** | ✅ `wiki-missing-urls.mjs` / `merge-wiki-raw.mjs` / `report-meta.mjs`，下次补数据不用再手搓 |
 
 **重要数据发现**（都已写进数据，别再重复查）：
 
@@ -53,6 +56,8 @@
 - `サンダースネイク` 有 **5 条参考视频**（含 Gear 官方讲座）
 - `鬼人スネイク` 作成者 Shuu、**本家般若**；`サ終スネ` 只有本家 Makki 没有作成者
 - 多条词条有 `系列名3` → **一个技可以属于多个系列**（暂未支持，见第五节）
+- **流星スネイク 的 5 个变体各有其人**：白狐ver=Hako、ギアver/ギアver2=Gear、ふぇるとver=felt、はらver=Hara；Rask 是原版作成者，不是这些版本的作者
+- **wiki 上确实不存在的页面**（抓过 404，别重复抓）：`長安門`、`掴み虚閃`、`掴み虚閃・帰刃`、`蒼月剣斬`
 
 ---
 
@@ -60,12 +65,12 @@
 
 | 项 | 值 |
 |---|---|
-| 提交数 | **37**（本轮提交后同步） |
+| 提交数 | **38**（本轮提交后同步） |
 | 线上 | <https://wotabox.pages.dev> —— 已含「个人技池」 |
-| APK | `v0.8.0` **已打本地签名包**：`android\app\build\outputs\apk\release\app-release.apk`（4.32 MB、versionCode 8）；**还没发到 GitHub Releases** |
+| APK | `v0.8.0` **已打本地签名包**：`android\app\build\outputs\apk\release\app-release.apk`（4.32 MB、versionCode 8）；**还没发到 GitHub Releases**；数据在打完包后又有更新，发布前需重打 |
 | 签名 | `keystore/wotabox-release.jks`（PKCS12 / RSA 4096 / 36500 天，别名 `wotabox`）；证书 SHA-256 `E7:54:C3:C0:F4:87:80:38:60:34:46:E7:B6:82:03:BE:8A:4B:1D:9B:46:77:57:CE:F2:40:F4:3E:1F:21:CA:2F` |
 | 环境变量 | ✅ `JAVA_HOME` / `ANDROID_HOME` / `GRADLE_USER_HOME` 已 `setx` 永久化 |
-| 技数据 | 275 技 / 14 系列；20 个有作成者、23 个有视频 |
+| 技数据 | 275 技 / 14 系列；**64 个有作成者、57 个有视频**（wiki 命中 63 条词条；明细见 PROJECT-MEMORY 第四节） |
 | Context Windows 插件 | `dsh-context-windows@0.1.3` 已装、`contextTokens` 已调到 163840；**但 cordis 预设下不生效**（见第四节 3） |
 
 ---
@@ -96,11 +101,12 @@
 | **P0** | ~~正式签名 release APK + 保管 keystore~~ | ✅ 2026-10-21 完成：`keystore/wotabox-release.jks` + `keystore.properties`（均已 gitignore），另存一份在 `C:\Users\LENOVO\Documents\wotabox-keystore-backup\`。**还要自己再拷一份到移动硬盘/网盘** |
 | **P0** | ~~环境变量永久化~~ | ✅ 已 `setx`，见第一节 |
 | **P1** | 把 `v0.8.0` 传到 GitHub Releases | 本地包已就绪：`android\app\build\outputs\apk\release\app-release.apk`；记得在说明里写「旧 debug 版需卸载重装」 |
+| **P1** | 继续补剩余系列元数据 | 待补：羚系 11 / 乖離系 8 / 北斗系 6 / 摩耶系 6 / 烈剣系 6 / 流月系 5 / 神威系 4；末分类还有 157 条要逐条判断有没有 wiki 词条。工具已备好，见第七节 |
 | **P1** | Cloudflare Pages 接 Git 自动部署 | 现在 push 后还得手动 `npm run deploy` |
 | **P2** | 「你知道吗」板块 | 纯内容，最快出成果 |
 | **P2** | 视频对比器 | 有"平台视频无法帧同步"的硬约束，要先跟用户对齐预期 |
-| **P3** | 多系列支持（`series` → `seriesList`） | 用户明确说**暂缓** |
-| **P3** | 技图鉴数据补全 | 用户明确说**等社团用上 EA 版 + 拿到开发经费后再安排** |
+| **P3** | 多系列支持（`series` → `seriesList`） | 用户明确说**暂缓**；已知至少有 `系列名3` 的技：乖離スネイク、瀧桜華、白門 |
+| **P3** | 技图鉴数据补全（wiki 没有的维度） | 指技类型/难点/段数这些 wiki 根本没写的字段，用户明确说**等社团用上 EA 版 + 拿到开发经费后再安排**。注意：wiki 上**有**的元数据不在此列，照常补 |
 | **P4** | 全国光棒地图 | 需要后端 + 数据运营 + 合规，和其他"用户上传"类功能一起规划 |
 | **P4** | 技类型 / 你知道吗的用户上传 | 同上，都需要后端 + 身份 + 审核 |
 
@@ -133,7 +139,10 @@ cd android; .\gradlew.bat assembleRelease    # 产物 app\build\outputs\apk\rele
 # 验签（build-tools 路径按实际版本改）
 & "D:\Android\sdk\build-tools\36.0.0\apksigner.bat" verify --print-certs app\build\outputs\apk\release\app-release.apk
 
+node scripts/wiki-missing-urls.mjs 羚系  # 某系列缺哪些元数据 + 可直接抓取地址
+node scripts/merge-wiki-raw.mjs <分块文件>  # 抓回来的原文并入 wiki-raw.jsonl
 node scripts/import-wiki-raw.mjs   # wiki 原文 → wiki-meta.js
+node scripts/report-meta.mjs       # 覆盖率报告（按系列）
 node scripts/test-data.mjs         # 数据校验
 node scripts/test-bpm.mjs          # BPM 算法验收
 node scripts/test-tap.mjs          # 点拍逻辑验收
