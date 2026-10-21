@@ -45,8 +45,9 @@
 | **（第二场）正式签名** | ✅ 新 keystore `wotabox-release.jks`（RSA 4096 / 36500 天 / PKCS12）+ `build.gradle` 签名配置（凭据从 `keystore.properties` 读，文件不存在时降级不签名） |
 | **（第二场）v0.8.0 签名包** | ✅ 4.32 MB、versionCode 8、versionName 0.8.0、apksigner v2 验证通过（**尚未上传 Release**） |
 | **（第二场）插件体检** | ✅ 查清 Context Windows 在 cordis 预设下 `inactive`、九个工具全不挂载（详见第四节 3） |
-| **（第三场）6 个系列元数据补齐** | ✅ スネイク系 29/29、門系 11/12、瀧系 13/13、金剛系 3/3、霹靂一閃系 2/2、虚閃系 2/4；**有作成者 20→64、有视频 23→57**（wiki 命中 63 条） |
-| **（第三场）解析器又修 5 个坑** | ✅ `{{链接|09:34}}`、URL 占位置参数、占位文字被当时间、变体作成者归属、标题≠技名映射（详见第五节） |
+| **（第三场）14 个系列全部有元数据** | ✅ スネイク 25/29、瀧 13/13、羚 11/11、門 11/12、蒼月剣 8/9、乖離 8/8、摩耶 6/6、烈剣 6/6、流月 1/5、神威 4/4、金剛 3/3、霹靂一閃 2/2、虚閃 2/4、北斗 1/6；**有作成者 20→101、有视频 23→91**（wiki 命中 104 条） |
+| **（第三场）难度分级** | ✅ 四档色条（基础绿/进阶黄/专家红/大师紫 + 待评定灰条），接进技图鉴/收藏夹/技池/编排/选技列表；金剛系三条按星沫查证录入 |
+| **（第三场）解析器又修 7 个坑** | ✅ `{{链接}}`、URL 占位置、占位文字当时间、变体作成者、标题≠技名、颜色模板、裸 BV 号（详见第五节） |
 | **（第三场）新增 3 个流水线脚本** | ✅ `wiki-missing-urls.mjs` / `merge-wiki-raw.mjs` / `report-meta.mjs`，下次补数据不用再手搓 |
 
 **重要数据发现**（都已写进数据，别再重复查）：
@@ -70,7 +71,8 @@
 | APK | `v0.8.0` **已打本地签名包**：`android\app\build\outputs\apk\release\app-release.apk`（4.32 MB、versionCode 8）；**还没发到 GitHub Releases**；数据在打完包后又有更新，发布前需重打 |
 | 签名 | `keystore/wotabox-release.jks`（PKCS12 / RSA 4096 / 36500 天，别名 `wotabox`）；证书 SHA-256 `E7:54:C3:C0:F4:87:80:38:60:34:46:E7:B6:82:03:BE:8A:4B:1D:9B:46:77:57:CE:F2:40:F4:3E:1F:21:CA:2F` |
 | 环境变量 | ✅ `JAVA_HOME` / `ANDROID_HOME` / `GRADLE_USER_HOME` 已 `setx` 永久化 |
-| 技数据 | 275 技 / 14 系列；**64 个有作成者、57 个有视频**（wiki 命中 63 条词条；明细见 PROJECT-MEMORY 第四节） |
+| 技数据 | 275 技 / 14 系列；**101 个有作成者、91 个有视频**（wiki 命中 104 条词条；明细见 PROJECT-MEMORY 第四节） |
+| 难度 | 四档色条已上线；已核定 3 条（金剛系）＝ 基础 2 / 进阶 1，**其余 272 条待评定**（数据在 `src/data/difficulty.js`） |
 | Context Windows 插件 | `dsh-context-windows@0.1.3` 已装、`contextTokens` 已调到 163840；**但 cordis 预设下不生效**（见第四节 3） |
 
 ---
@@ -101,7 +103,8 @@
 | **P0** | ~~正式签名 release APK + 保管 keystore~~ | ✅ 2026-10-21 完成：`keystore/wotabox-release.jks` + `keystore.properties`（均已 gitignore），另存一份在 `C:\Users\LENOVO\Documents\wotabox-keystore-backup\`。**还要自己再拷一份到移动硬盘/网盘** |
 | **P0** | ~~环境变量永久化~~ | ✅ 已 `setx`，见第一节 |
 | **P1** | 把 `v0.8.0` 传到 GitHub Releases | 本地包已就绪：`android\app\build\outputs\apk\release\app-release.apk`；记得在说明里写「旧 debug 版需卸载重装」 |
-| **P1** | 继续补剩余系列元数据 | 待补：羚系 11 / 乖離系 8 / 北斗系 6 / 摩耶系 6 / 烈剣系 6 / 流月系 5 / 神威系 4；末分类还有 157 条要逐条判断有没有 wiki 词条。工具已备好，见第七节 |
+| **P1** | 继续补元数据：**未分类 157 条** | 14 个系列已扫完，剩下的大头是未分类（要逐条判断有没有 wiki 词条）。工具：`wiki-missing-urls.mjs` 系列名、`merge-wiki-raw.mjs`、`report-meta.mjs` |
+| **P1** | 难度分级继续录入 | 现在只有金剛系 3 条，其余 272 条待评定。录入只需往 `src/data/difficulty.js` 的 `DIFFICULTY` 表加行（键＝日文名），值只能是 `basic`/`advanced`/`expert`/`master`，写错会被 `test-data.mjs` 拦下 |
 | **P1** | Cloudflare Pages 接 Git 自动部署 | 现在 push 后还得手动 `npm run deploy` |
 | **P2** | 「你知道吗」板块 | 纯内容，最快出成果 |
 | **P2** | 视频对比器 | 有"平台视频无法帧同步"的硬约束，要先跟用户对齐预期 |
