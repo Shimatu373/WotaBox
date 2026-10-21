@@ -174,6 +174,9 @@ function plain(text) {
   return s
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
     .replace(/\[\[([^\]]+)\]\]/g, '$1')
+    // 单方括号外链：[https://… 显示文字] → 显示文字；[https://…] 直接删掉
+    .replace(/\[https?:\/\/[^\s\]]+\s+([^\]]+)\]/g, '$1')
+    .replace(/\[https?:\/\/[^\]]+\]/g, '')
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/'''?/g, '')
     .replace(/\s+/g, ' ')

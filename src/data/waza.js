@@ -29,6 +29,7 @@
 
 import { IMPORTED, IMPORTED_SERIES } from './waza-imported.js'
 import { WIKI_ADDED, WIKI_ADDED_TITLES } from './waza-wiki-extra.js'
+import { SERIES_AUTO, SERIES_AUTO_INFO } from './series-auto.js'
 import WIKI_META from './wiki-meta.js'
 import { DIFFICULTY } from './difficulty.js'
 
@@ -69,10 +70,11 @@ const CURATED_SERIES_INFO = {
   },
 }
 
-/** 系列元信息（手写 + 批量导入合并） */
+/** 系列元信息（手写 + 批量导入 + wiki 系列名自动成组合并） */
 export const SERIES_INFO = {
   ...CURATED_SERIES_INFO,
   ...IMPORTED_SERIES,
+  ...SERIES_AUTO_INFO,
   スネイク系: {
     origin: 'ばっくほーん〈BackHorn〉（雷蛇改编）',
     note: 'wiki 有官方分类（分类:スネイク系），以雷蛇为原型的庞大家族。',
@@ -306,7 +308,8 @@ export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) =>
     nameZh: nameZh || null,
     nameRomaji: extra.nameRomaji || meta.nameRomaji || null,
     aliases: extra.aliases?.length ? extra.aliases : meta.readings || [],
-    series: SERIES_OVERRIDE[nameJa] || series || null,
+    // 系列：手写 ROWS > 显式覆盖表 > wiki 系列名自动成组 > 行内声明
+    series: SERIES_OVERRIDE[nameJa] || SERIES_AUTO[nameJa] || series || null,
     type: type || null,
     creator: meta.creator || extra.creator || null,
     // 本家（原版作者）。变体词条里它和作成者不是同一个人，UI 上分开显示

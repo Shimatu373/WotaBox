@@ -1888,7 +1888,7 @@ export const WIKI_META = {
         "url": "https://youtu.be/Emzs_4O1dH4?t=62"
       }
     ],
-    "pitfalls": "来自于游戏《舰队Collection》中的舰娘【[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 摩耶]】。她是CA系舰娘中唯一的对空特化舰娘，一改就拥有89对空值，改二更是拥有高达106的对空值。 阅读更多：[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 本文引自kcwiki舰娘百科]；小neta",
+    "pitfalls": "来自于游戏《舰队Collection》中的舰娘【摩耶】。她是CA系舰娘中唯一的对空特化舰娘，一改就拥有89对空值，改二更是拥有高达106的对空值。 阅读更多：本文引自kcwiki舰娘百科；小neta",
     "seriesJa": "摩耶",
     "tags": [
       "航平",
@@ -1911,7 +1911,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1ox411B7ei?t=90"
       }
     ],
-    "pitfalls": "来自于游戏《舰队Collection》中的舰娘【[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 摩耶]】。她是CA系舰娘中唯一的对空特化舰娘，一改就拥有89对空值，改二更是拥有高达106的对空值。 阅读更多：[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 本文引自kcwiki舰娘百科]；小neta",
+    "pitfalls": "来自于游戏《舰队Collection》中的舰娘【摩耶】。她是CA系舰娘中唯一的对空特化舰娘，一改就拥有89对空值，改二更是拥有高达106的对空值。 阅读更多：本文引自kcwiki舰娘百科；小neta",
     "seriesJa": "摩耶",
     "tags": [
       "航平",
@@ -2400,7 +2400,7 @@ export const WIKI_META = {
     "tags": []
   },
   "ムラマサ": {
-    "creator": "[https://www.bilibili.com/video/BV1xw411y76B 三宅]",
+    "creator": "三宅",
     "origin": "BackHorn",
     "year": 2009,
     "readings": [
@@ -5571,7 +5571,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1Fq4y1q7yH?t=114.1"
       }
     ],
-    "pitfalls": "此时间版本的该技，较先前所有版本差异巨大，建议自行对比选择学习。 该技的整体动作已接近[https://wotagei.huijiwiki.com/wiki/%E5%88%86%E7%B1%BB:%E5%A8%9C%E9%9C%B2%E6%A2%85%E4%BA%9A%E7%B3%BB 【娜露梅亚系类】]的技；此时间版本的该技较2022年的版本差异巨大，建议自行对比选择学习。 其前2八拍有较大改动，且其后2八拍修改后与ナルメア〈娜露梅亚〉相近。；萨丽爱尔（サリエル），又作萨丽艾尔，是系列作品《东方project》中的角色，于《东方灵异传》（旧作）首次登场。萨丽爱尔的原型是御前七大天使之一的沙利叶（Suriel）。；小neta",
+    "pitfalls": "此时间版本的该技，较先前所有版本差异巨大，建议自行对比选择学习。 该技的整体动作已接近【娜露梅亚系类】的技；此时间版本的该技较2022年的版本差异巨大，建议自行对比选择学习。 其前2八拍有较大改动，且其后2八拍修改后与ナルメア〈娜露梅亚〉相近。；萨丽爱尔（サリエル），又作萨丽艾尔，是系列作品《东方project》中的角色，于《东方灵异传》（旧作）首次登场。萨丽爱尔的原型是御前七大天使之一的沙利叶（Suriel）。；小neta",
     "seriesJa": null,
     "tags": [
       "2022年",
