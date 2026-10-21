@@ -146,6 +146,14 @@ function seriesMeta(name) {
                   <dt>作成者</dt>
                   <dd>{{ w.creator }}</dd>
                 </div>
+                <div v-else-if="w.origin">
+                  <dt>本家</dt>
+                  <dd>{{ w.origin }}</dd>
+                </div>
+                <div v-if="w.creator && w.origin && w.origin !== w.creator">
+                  <dt>本家</dt>
+                  <dd>{{ w.origin }}</dd>
+                </div>
                 <div v-if="w.year">
                   <dt>年份</dt>
                   <dd>{{ w.year }}</dd>

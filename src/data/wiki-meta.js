@@ -753,7 +753,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1bf4y1J7H9?t=85"
       }
     ],
-    "pitfalls": "「虎ノ門」为日本地名 结城晴；考证",
+    "pitfalls": "「虎ノ門」为日本地名 有待考证；考证",
     "seriesJa": "門系",
     "tags": [
       "門系技",
@@ -774,7 +774,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1bf4y1J7H9?t=85"
       }
     ],
-    "pitfalls": "「虎ノ門」为日本地名 结城晴；考证",
+    "pitfalls": "「虎ノ門」为日本地名 有待考证；考证",
     "seriesJa": "門系",
     "tags": [
       "門系技",
@@ -869,7 +869,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1bf4y1J7H9?t=75"
       }
     ],
-    "pitfalls": "「半藏門」为日本地名 结城晴；考证",
+    "pitfalls": "「半藏門」为日本地名 有待考证；考证",
     "seriesJa": "門系",
     "tags": [
       "門系技",
@@ -890,7 +890,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1bf4y1J7H9?t=75"
       }
     ],
-    "pitfalls": "「半藏門」为日本地名 结城晴；考证",
+    "pitfalls": "「半藏門」为日本地名 有待考证；考证",
     "seriesJa": "門系",
     "tags": [
       "門系技",
@@ -919,7 +919,7 @@ export const WIKI_META = {
         "url": "https://youtu.be/kR1Sok3PW0M?t=115"
       }
     ],
-    "pitfalls": "「光化門」为朝鲜地名 结城晴；考证",
+    "pitfalls": "「光化門」为朝鲜地名 有待考证；考证",
     "seriesJa": "門系",
     "tags": [
       "門系技",
@@ -1424,7 +1424,7 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1gZ4y147QM"
       }
     ],
-    "pitfalls": "《鬼灭之刃》中角色Lily 的呼吸术：Lily、同为Miza所作雷之呼吸相关技还有：霹靂一閃・六連〈霹雳一闪・六连〉、火雷神 分类:Miza；小neta",
+    "pitfalls": "《鬼灭之刃》中角色【我妻善逸】 的呼吸术：【雷之呼吸·壹之型·霹雳一闪】、同为Miza所作雷之呼吸相关技还有：霹靂一閃・六連〈霹雳一闪・六连〉、火雷神 分类:Miza；小neta",
     "seriesJa": "雷之呼吸",
     "tags": [
       "Miza"
@@ -1447,10 +1447,917 @@ export const WIKI_META = {
         "url": "https://www.bilibili.com/video/BV1Lk4y117b1?t=86"
       }
     ],
-    "pitfalls": "《鬼灭之刃》中角色Lily 呼吸术、同为Miza所作雷之呼吸相关技还有：霹靂一閃〈霹雳一闪〉、火雷神 分类:Miza；小neta",
+    "pitfalls": "《鬼灭之刃》中角色【我妻善逸】 呼吸术、同为Miza所作雷之呼吸相关技还有：霹靂一閃〈霹雳一闪〉、火雷神 分类:Miza；小neta",
     "seriesJa": "雷之呼吸",
     "tags": [
       "Miza"
+    ]
+  },
+  "羚刀": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:25",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=25"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚黄泉": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": null,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "12:25",
+        "title": "【技連】尊師×手下 #2【みざ×けるびむ】",
+        "url": "https://www.youtube.com/watch?v=bkUw8XKxrkc&t=465s"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚謳ノ鎌": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:46",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=46"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚騎士": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [
+      "ガミューサ",
+      "Gamyuusa"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "01:10",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=70"
+      }
+    ],
+    "pitfalls": "《BLEACH》中角色【ネリエル·トゥ·オーデルシュヴァンク】的斩魄刀【ガミューサ】；小neta",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系",
+      "虚閃系"
+    ]
+  },
+  "羚騎士・帰刃": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [
+      "ガミューサ・レスレクシオン",
+      "Gamyuusa Resurrección"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "01:21",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=81"
+      },
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "08:09",
+        "title": "【技連】尊師×手下 #2【みざ×けるびむ】",
+        "url": "https://www.youtube.com/watch?v=bkUw8XKxrkc&t=489s"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系",
+      "虚閃系"
+    ]
+  },
+  "羚騎士ノ謳": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:57",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=57"
+      },
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "01:25",
+        "title": "",
+        "url": "https://www.youtube.com/watch?v=Svu94gTqFjc&t=85s"
+      }
+    ],
+    "pitfalls": "该技为みざオリ技【羚騎士・闇槍】改动而来；相关信息",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚槍": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:35",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=35"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚蛇": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2019,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:01",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=1"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚照": {
+    "creator": "Miza",
+    "origin": "Miza⧸莉花",
+    "year": 2019,
+    "readings": [
+      "レイテラス"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:12",
+        "title": "【みざ】羚系技連【WOTA艺】",
+        "url": "https://www.bilibili.com/video/BV19p4y1S7Et?t=12"
+      },
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:13",
+        "title": "羚照",
+        "url": "https://x.com/miza_BEMA_joker/status/1269615030565171201/video/1?t=13"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系",
+      "アマテラス系"
+    ]
+  },
+  "羚照・百鬼姫": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2020,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "企划",
+        "performer": "Miza",
+        "time": "01:20",
+        "title": "【西尾教団満開】零れ散る露浴びて紅く仄かに染まる恋詠桜",
+        "url": "https://www.youtube.com/watch?v=GABvBPRVAhE&t=80s"
+      }
+    ],
+    "pitfalls": "羚照派生技；相关信息",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "羚照・詠唱": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": 2021,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "企划",
+        "performer": "Miza",
+        "time": "00:59",
+        "title": "【西尾教団】君が歌い。僕が踊る。",
+        "url": "https://www.youtube.com/watch?v=W7dreuZ70gQ&t=59s"
+      }
+    ],
+    "pitfalls": "羚照派生技；相关信息",
+    "seriesJa": "羚系",
+    "tags": [
+      "Miza",
+      "羚系"
+    ]
+  },
+  "乖離剣": {
+    "creator": "零夜",
+    "origin": "零夜⧸Miza",
+    "year": null,
+    "readings": [
+      "Enuma Elish"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:04",
+        "title": "【みざ】オリ技やってみた【技連】",
+        "url": "https://youtu.be/lbnNLRaLUiQ?t=4"
+      }
+    ],
+    "pitfalls": "《Fate/Stay Night》中角色【吉尔伽美什】的所拥有的宝具；小neta",
+    "seriesJa": "乖離系",
+    "tags": [
+      "Miza",
+      "乖離系",
+      "零夜"
+    ]
+  },
+  "乖離剣・藍染": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "Miza",
+      "乖離系"
+    ]
+  },
+  "乖離槍": {
+    "creator": "零夜",
+    "origin": "零夜",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "零夜",
+      "乖離系"
+    ]
+  },
+  "乖離正": {
+    "creator": "零夜",
+    "origin": "零夜",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "零夜",
+      "乖離系"
+    ]
+  },
+  "乖燐": {
+    "creator": "零夜",
+    "origin": "零夜⧸Miza",
+    "year": null,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "00:14",
+        "title": "【みざ】オリ技やってみた【技連】",
+        "url": "https://youtu.be/lbnNLRaLUiQ?t=14"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "Miza",
+      "乖離系",
+      "零夜"
+    ]
+  },
+  "乖ノ逆鱗": {
+    "creator": "Miza",
+    "origin": "Miza",
+    "year": null,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Miza",
+        "time": "03:08",
+        "title": "【みざ】オリ技やってみた【技連】",
+        "url": "https://youtu.be/lbnNLRaLUiQ?t=188"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "Miza",
+      "乖離系"
+    ]
+  },
+  "乖七斬": {
+    "creator": "零夜",
+    "origin": "零夜",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "零夜",
+      "乖離系"
+    ]
+  },
+  "乖双絶閃": {
+    "creator": "零夜",
+    "origin": "零夜",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": "乖離系",
+    "tags": [
+      "零夜",
+      "乖離系"
+    ]
+  },
+  "北斗": {
+    "creator": "教主",
+    "origin": "教主",
+    "year": 2024,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "教主",
+        "time": null,
+        "title": "【WOTA艺】ori技单：北斗",
+        "url": "https://www.bilibili.com/video/BV1ox421Q72Z"
+      }
+    ],
+    "pitfalls": "名称来自于北斗七星；小neta",
+    "seriesJa": null,
+    "tags": [
+      "国人技",
+      "教主",
+      "北斗系",
+      "来源于收集表"
+    ]
+  },
+  "摩耶": {
+    "creator": "航平",
+    "origin": "航平",
+    "year": 2017,
+    "readings": [
+      "まや",
+      "Maya"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "航平",
+        "time": "01:02",
+        "title": "【解説】摩耶系解説動画！【ヲタ芸】【航平】",
+        "url": "https://youtu.be/Emzs_4O1dH4?t=62"
+      }
+    ],
+    "pitfalls": "来自于游戏《舰队Collection》中的舰娘【[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 摩耶]】。她是CA系舰娘中唯一的对空特化舰娘，一改就拥有89对空值，改二更是拥有高达106的对空值。 阅读更多：[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 本文引自kcwiki舰娘百科]；小neta",
+    "seriesJa": "摩耶",
+    "tags": [
+      "航平",
+      "摩耶系"
+    ]
+  },
+  "摩耶大空": {
+    "creator": "航平",
+    "origin": "航平",
+    "year": 2017,
+    "readings": [
+      "Maya Sky"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "航平",
+        "time": "01:30",
+        "title": "【解説】摩耶系解説動画！【WOTA艺】【航平】",
+        "url": "https://www.bilibili.com/video/BV1ox411B7ei?t=90"
+      }
+    ],
+    "pitfalls": "来自于游戏《舰队Collection》中的舰娘【[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 摩耶]】。她是CA系舰娘中唯一的对空特化舰娘，一改就拥有89对空值，改二更是拥有高达106的对空值。 阅读更多：[https://zh.kcwiki.cn/wiki/%E6%91%A9%E8%80%B6 本文引自kcwiki舰娘百科]；小neta",
+    "seriesJa": "摩耶",
+    "tags": [
+      "航平",
+      "摩耶系"
+    ]
+  },
+  "摩耶天空": {
+    "creator": "航平",
+    "origin": "航平",
+    "year": 2017,
+    "readings": [
+      "Maya Tenku"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "航平",
+        "time": "00:40",
+        "title": "",
+        "url": "https://www.youtube.com/watch?v=1TFgSu1RPus&t=40s"
+      },
+      {
+        "kind": "技连",
+        "performer": "航平",
+        "time": "01:30",
+        "title": "",
+        "url": "https://www.youtube.com/watch?v=wHnqnSf4orA&t=90s"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "摩耶",
+    "tags": [
+      "摩耶系",
+      "航平"
+    ]
+  },
+  "摩耶天衣": {
+    "creator": "航平",
+    "origin": "航平",
+    "year": 2017,
+    "readings": [
+      "Maya Ten'i"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "航平",
+        "time": "00:32",
+        "title": "【航平】オリ技の人なんてしらないっ！ 【ヲタ芸】【オリ技連】",
+        "url": "https://www.youtube.com/watch?v=wHnqnSf4orA&t=32s"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "摩耶",
+    "tags": [
+      "摩耶系",
+      "航平"
+    ]
+  },
+  "摩耶·裂空": {
+    "creator": "航平",
+    "origin": "航平",
+    "year": 2017,
+    "readings": [
+      "Maya Rekku"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "航平",
+        "time": "01:40",
+        "title": "【解説】摩耶系解説動画！ 【WOTA艺】 【航平】",
+        "url": "https://www.bilibili.com/video/BV1ox411B7ei?t=100"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "摩耶",
+    "tags": [
+      "航平",
+      "摩耶系"
+    ]
+  },
+  "摩耶疾楓": {
+    "creator": "Kaede",
+    "origin": "Kaede",
+    "year": 2024,
+    "readings": [
+      "Maya Kaede"
+    ],
+    "videos": [
+      {
+        "kind": "技单⧸ 披露",
+        "performer": "Kaede",
+        "time": null,
+        "title": "摩耶疾楓",
+        "url": "https://x.com/_K4ttE/status/1849043824154476938"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "摩耶",
+    "tags": [
+      "航平",
+      "摩耶系"
+    ]
+  },
+  "烈剣": {
+    "creator": "nanase",
+    "origin": "nanase",
+    "year": 2024,
+    "readings": [
+      "Rekken"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "nanase",
+        "time": "02:08",
+        "title": "【ななせ】WOTA艺世界最强自创技连打〜2022〜 形勢逆転 NARUTO戦闘BGM【Fly-N】",
+        "url": "https://www.bilibili.com/video/BV1iR4y1w7ZD?t=128.0"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "Nanase",
+      "剣系",
+      "烈系"
+    ]
+  },
+  "烈剱": {
+    "creator": "Nanase",
+    "origin": "Nanase",
+    "year": 2018,
+    "readings": [
+      "れつるぎ",
+      "Retsurugi"
+    ],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "Nanase",
+        "time": null,
+        "title": "【搬运/WOTA艺】Nanase 【烈剱】",
+        "url": "https://www.bilibili.com/video/BV16EcPegE9y"
+      },
+      {
+        "kind": "技单",
+        "performer": "Nanase",
+        "time": null,
+        "title": "Nanase 【烈剱】",
+        "url": "https://x.com/Nanase42ln/status/1320709310821724160?t=GJxupj8Q-25AURc_nyBSzA&s=09"
+      },
+      {
+        "kind": "企划",
+        "performer": "Nanase",
+        "time": "01:03",
+        "title": "【Fly-N】ADAMAS【ソードアート・オンライン·アリシゼーションOP】",
+        "url": "https://www.bilibili.com/video/BV1ot411U7YB?t=63.2"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "烈系",
+      "Nanase"
+    ]
+  },
+  "烈剣舞": {
+    "creator": "Nanase",
+    "origin": "Nanase",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "烈系",
+      "Nanase"
+    ]
+  },
+  "烈剣炎": {
+    "creator": "nanase",
+    "origin": "nanase",
+    "year": 2024,
+    "readings": [
+      "Rekken Homura"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "nanase",
+        "time": "00:55",
+        "title": "【魔法科高校の劣等生OP】LiSA「Shouted Serenade」で ヲタ芸オリジナル技連発！【Season3】",
+        "url": "https://www.bilibili.com/video/BV1jzDHYWE89?t=55.0"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "Nanase",
+      "烈系"
+    ]
+  },
+  "烈剣爆炎刃": {
+    "creator": "nanase",
+    "origin": "nanase",
+    "year": 2024,
+    "readings": [
+      "Rekkenbakuenjin"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "nanase",
+        "time": "01:53",
+        "title": "【魔法科高校の劣等生OP】LiSA「Shouted Serenade」で ヲタ芸オリジナル技連発！【Season3】",
+        "url": "https://www.bilibili.com/video/BV1jzDHYWE89?t=113.0"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "Nanase",
+      "烈系"
+    ]
+  },
+  "烈心爆炎刃": {
+    "creator": "夜瞑",
+    "origin": "夜瞑",
+    "year": null,
+    "readings": [],
+    "videos": [],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "夜瞑",
+      "国人技"
+    ]
+  },
+  "流月辞": {
+    "creator": "狱祠",
+    "origin": "狱祠",
+    "year": 2025,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "Ori技单",
+        "performer": "狱祠",
+        "time": null,
+        "title": "【WOTA艺】オリ技单 - 流月辞",
+        "url": "https://www.bilibili.com/video/BV1Nn9hYuE1y"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "国人技",
+      "狱祠"
+    ]
+  },
+  "流月赋": {
+    "creator": null,
+    "origin": "狱祠",
+    "year": null,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "狱祠",
+        "time": "00:34",
+        "title": "【WOTA艺】个人自创技mini7技连 -BWW SCREAM-",
+        "url": "https://www.bilibili.com/video/BV1aP4y1R7XN?t=34"
+      }
+    ],
+    "pitfalls": "小neta；其他：流月丛云",
+    "seriesJa": "流月诗词歌赋",
+    "tags": [
+      "狱祠",
+      "流月诗词歌赋"
+    ]
+  },
+  "流月歌": {
+    "creator": null,
+    "origin": "狱祠",
+    "year": 2025,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "狱祠",
+        "time": "01:12",
+        "title": "【WOTA艺】天つ風 (feat. 夏川 陽子) [新技披露]",
+        "url": "https://www.bilibili.com/video/BV16YpoziEjh?t=72"
+      }
+    ],
+    "pitfalls": "小neta；其他：流月丛云",
+    "seriesJa": "流月诗词歌赋",
+    "tags": [
+      "狱祠",
+      "流月诗词歌赋"
+    ]
+  },
+  "流月诗": {
+    "creator": null,
+    "origin": "狱祠",
+    "year": 2025,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "狱祠",
+        "time": null,
+        "title": "【WOTA艺】オリ技单 - 流月诗",
+        "url": "https://www.bilibili.com/video/BV11PxczfEY9"
+      }
+    ],
+    "pitfalls": "小neta；其他：流月丛云",
+    "seriesJa": "流月诗词歌赋",
+    "tags": [
+      "狱祠",
+      "流月诗词歌赋"
+    ]
+  },
+  "流月アンタレス": {
+    "creator": null,
+    "origin": "狱祠",
+    "year": 2026,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "狱祠",
+        "time": null,
+        "title": "【WOTA艺】オリ技单 - 流月アンタレス",
+        "url": "https://www.bilibili.com/video/BV1fV3P6uE7u"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "狱祠"
+    ]
+  },
+  "神威": {
+    "creator": "Okagia",
+    "origin": "Okagia",
+    "year": 2010,
+    "readings": [
+      "Kamui"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Hako",
+        "time": "00:43",
+        "title": "【WOTA艺】ヲタ芸サビ技集【白狐】【一人技連】",
+        "url": "https://www.bilibili.com/video/BV1cMmwYAE8P?t=42.7"
+      },
+      {
+        "kind": "技连",
+        "performer": "Latte",
+        "time": "02:40",
+        "title": "【全141种】ヲタ芸最后ノ技'超絶'大全集",
+        "url": "https://www.bilibili.com/video/BV14Z42147fx?t=159.9"
+      },
+      {
+        "kind": "技连",
+        "performer": "Latte & Hara",
+        "time": "06:31",
+        "title": "WOTA艺的技 特別大全集！！2019",
+        "url": "https://www.bilibili.com/video/BV1UJ411r7bT?t=391.3"
+      }
+    ],
+    "pitfalls": "通常将最后缓慢且大幅度地挥动手臂的动作称为【吸收】。；小neta",
+    "seriesJa": "神威",
+    "tags": []
+  },
+  "神威零": {
+    "creator": "Latte",
+    "origin": "Latte",
+    "year": 2024,
+    "readings": [
+      "かむい れい",
+      "Kamui Rei"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Latte",
+        "time": "02:58",
+        "title": "【らて】技-My favorite skills2024-【らて】",
+        "url": "https://youtu.be/7_pk6mKE8pg?t=178"
+      }
+    ],
+    "pitfalls": "相较神威，改得并不多；趣闻",
+    "seriesJa": "神威",
+    "tags": []
+  },
+  "神威灵装·八番": {
+    "creator": "AKHOT",
+    "origin": "AKHOT",
+    "year": 2025,
+    "readings": [
+      "Elohim Tzabaoth"
+    ],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "AKHOT",
+        "time": null,
+        "title": "【WOTA艺】技单——神威灵装·八番",
+        "url": "https://www.bilibili.com/video/BV1taW5zcEUs"
+      }
+    ],
+    "pitfalls": "来自于《约会大作战》中的角色【精灵·八舞耶倶矢】和【精灵·八舞夕弦】 的灵装，灵装是由皮带似的布料为主、露出度极大的紫蓝色拘束服 神威灵装·八番，项圈上扣有锁头，一边的手脚个别装有断链铐（耶俱矢是右边而夕弦是左边），天使的共有名称是飓风骑士；小neta",
+    "seriesJa": "原质系",
+    "tags": [
+      "AKHOT",
+      "国人技",
+      "原质系",
+      "约会大作战相关技"
+    ]
+  },
+  "神威灵装·十番": {
+    "creator": "AKHOT",
+    "origin": "AKHOT",
+    "year": 2025,
+    "readings": [
+      "Adonai·Melekh"
+    ],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "AKHOT",
+        "time": null,
+        "title": "【WOTA艺】技单——神威灵装·十番",
+        "url": "https://www.bilibili.com/video/BV15FACeCESA"
+      }
+    ],
+    "pitfalls": "来自于《约会大作战》中的角色【精灵·夜刀神十香】的识别名为公主，灵装是名为神威灵装·十番的紫色铠甲及礼服，戴着水晶发饰。；小neta",
+    "seriesJa": "原质系",
+    "tags": [
+      "AKHOT",
+      "国人技",
+      "原质系",
+      "约会大作战相关技"
     ]
   }
 }

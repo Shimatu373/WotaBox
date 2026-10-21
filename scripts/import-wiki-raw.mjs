@@ -133,6 +133,29 @@ function stripRuby(s) {
   return out
 }
 
+/** 参数是否只是「显示开关」之类（1 / 3 / 显 / x / b），而不是正文 */
+function isFlagArg(s) {
+  return s === '' || /^\d+$/.test(s) || /^[显xbBw]{1,2}$/.test(s)
+}
+
+/**
+ * 剥掉一层模板、留下可读内容。三种情况要分清：
+ *   {{三水}} / {{三水|1|显}}        → 三水        （模板名就是人，参数是显示开关）
+ *   {{八舞橙|「神威灵装·八番」}}     → 「神威灵装·八番」（颜色模板，参数才是正文）
+ *   {{发布|1=5|2=3}}               → 空          （纯具名参数＝纯装饰）
+ * 早先一律取模板名，会把「神威灵装·八番」的作成者解析成「八舞橙」。
+ */
+function stripTemplateOnce(inner) {
+  const parts = splitTopLevel(inner)
+  const name = (parts[0] || '').trim()
+  const args = parts.slice(1).map((s) => s.trim())
+  if (!args.length) return name
+  const namedOnly = args.every((a) => a === '' || /^[^\s=]+=/.test(a))
+  if (namedOnly && args.some((a) => a !== '')) return ''
+  if (args.every(isFlagArg)) return name
+  return args[0]
+}
+
 function plain(text) {
   if (!text) return ''
   let s = String(text)
@@ -142,9 +165,9 @@ function plain(text) {
   s = s.replace(/\{\{换行\}\}/g, ' ')
   // {{注音|显示|原音}} -> 显示
   s = stripRuby(s)
-  // 其余模板剥壳：{{三水}} / {{三水|1|显}} -> 三水
-  for (let i = 0; i < 6; i++) {
-    const next = s.replace(/\{\{([^|{}]+)(?:\|[^{}]*)?\}\}/g, '$1')
+  // 其余模板逐层剥壳（由内向外，最多 8 层）
+  for (let i = 0; i < 8; i++) {
+    const next = s.replace(/\{\{([^{}]*)\}\}/g, (_, inner) => stripTemplateOnce(inner))
     if (next === s) break
     s = next
   }
@@ -224,6 +247,8 @@ function parseRef(inner) {
     const inline = positional.slice(3).find((p) => /^https?:\/\//i.test((p || '').trim()))
     if (inline) url = inline.trim()
   }
+  // 有的词条直接把 BV 号写在链接位（例：金剛、北斗），补齐成完整地址
+  if (/^BV[0-9A-Za-z]{10}$/.test(url)) url = 'https://www.bilibili.com/video/' + url
   let time = timeFromTemplate(positional[3] || named['4'] || '')
   // 模板没写时间、但链接里带了 ?t=170（B站/YouTube 都表示起始秒数）——这是原文自带的信息
   if (!time && url) {

@@ -304,6 +304,8 @@ export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) =>
     series: SERIES_OVERRIDE[nameJa] || series || null,
     type: type || null,
     creator: meta.creator || extra.creator || null,
+    // 本家（原版作者）。变体词条里它和作成者不是同一个人，UI 上分开显示
+    origin: meta.origin || extra.origin || null,
     year: meta.year || extra.year || null,
     bars: extra.bars ?? null,
     tags: extra.tags?.length ? extra.tags : meta.tags || [],
