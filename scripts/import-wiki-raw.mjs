@@ -108,10 +108,41 @@ function getTemplates(raw, name) {
 }
 
 /** 去掉常见 wiki 标记，留下人类可读文本 */
+/** 处理 {{注音|显示|原音}}：只保留「显示」；支持内部嵌套模板 */
+function stripRuby(s) {
+  let out = s
+  for (let guard = 0; guard < 30; guard++) {
+    const start = out.indexOf('{{注音|')
+    if (start === -1) break
+    let depth = 0
+    let i = start
+    for (; i < out.length; i++) {
+      if (out[i] === '{' && out[i + 1] === '{') {
+        depth++
+        i++
+      } else if (out[i] === '}' && out[i + 1] === '}') {
+        depth--
+        i++
+        if (depth === 0) break
+      }
+    }
+    const inner = out.slice(start + '{{注音|'.length, i - 1)
+    const first = splitTopLevel(inner)[0] || ''
+    out = out.slice(0, start) + first + out.slice(i + 1)
+  }
+  return out
+}
+
 function plain(text) {
   if (!text) return ''
   let s = String(text)
-  // 反复剥离模板：{{三水}} -> 三水；{{三水|1|显}} -> 三水
+  // 去掉脚注
+  s = s.replace(/<ref[^>]*\/>/g, '').replace(/<ref[^>]*>[\s\S]*?<\/ref>/g, '')
+  // {{换行}} -> 空格
+  s = s.replace(/\{\{换行\}\}/g, ' ')
+  // {{注音|显示|原音}} -> 显示
+  s = stripRuby(s)
+  // 其余模板剥壳：{{三水}} / {{三水|1|显}} -> 三水
   for (let i = 0; i < 6; i++) {
     const next = s.replace(/\{\{([^|{}]+)(?:\|[^{}]*)?\}\}/g, '$1')
     if (next === s) break
@@ -151,24 +182,26 @@ function fmtClock(t) {
 /** 解析一条 {{参考|...}} */
 function parseRef(inner) {
   const parts = splitTopLevel(inner)
+  // 第一段是模板名，去掉它；其余空参数必须保留位置，否则 [4]标题 会顶到 [3]时间
+  if (parts.length && !parts[0].trim()) parts.shift()
   const positional = []
   const named = {}
   for (const p of parts) {
-    if (!p.trim()) continue
+    // 空参数保留位置（上面的 shift 已经去掉了模板名）
     const eq = p.indexOf('=')
     // 形如 "6=xxx" 或 "时间=2020年" 才算具名参数
     if (eq > 0 && /^\s*(\d+|[^\s=]+)\s*$/.test(p.slice(0, eq))) {
       named[p.slice(0, eq).trim()] = p.slice(eq + 1)
     } else {
-      positional.push(p)
+      positional.push(p.trim())
     }
   }
 
   const kind = plain(positional[0] || '')
   const performer = plain(positional[1] || '')
   const platform = plain(positional[2] || '')
-  const time = timeFromTemplate(positional[3] || '')
-  const title = plain(positional[4] || '')
+  const time = timeFromTemplate(positional[3] || named['4'] || '')
+  const title = plain(positional[4] || named['5'] || '')
   const url = (named['6'] || '').trim()
   const year = (named['时间'] || '').trim()
   const note = plain(named['7'] || '')
@@ -188,7 +221,7 @@ function parseRef(inner) {
 
 /** 解析整条词条的 raw 文本 */
 function parsePage(raw) {
-  // 主模板 {{技 ... }} 的内文
+  // 主模板 {{技 ... }} 的内文（注意 "{{技" 后面跟的是换行，不是 |）
   const bodies = getTemplates(raw, '技')
   const body = bodies.find((b) => b.includes('作成者=') || b.includes('原=')) || bodies[0] || raw
 
@@ -201,14 +234,11 @@ function parsePage(raw) {
     if (key) fields[key] = val
   }
 
+  // 本家视频 + 「以外视频」都要收
   const videos = []
-  for (const block of getTemplates(fields['视频'] || '', '参考')) {
-    const v = parseRef(block)
-    if (v) videos.push(v)
-  }
-  // 有些词条把参考直接写在 视频 字段外层
-  if (!videos.length && fields['视频']) {
-    for (const block of getTemplates(fields['视频'], '参考')) {
+  for (const src of [fields['视频'], fields['以外视频']]) {
+    if (!src) continue
+    for (const block of getTemplates(src, '参考')) {
       const v = parseRef(block)
       if (v) videos.push(v)
     }
@@ -216,13 +246,24 @@ function parsePage(raw) {
 
   const tags = [...raw.matchAll(/\[\[(?:分类|Category):([^\]|]+)\]\]/g)].map((m) => m[1].trim())
 
-  const yearFromVideo = videos.map((v) => v.year).find(Boolean)
-  const yearNum = yearFromVideo ? Number(String(yearFromVideo).replace(/[^\d]/g, '')) : null
+  const creator = plain(fields['作成者'] || '') || null
+  let origin = plain(fields['本家'] || '') || null
+  if (origin === '同上') origin = creator
+
+  // 年份：词条顶层的 |时间= 最准，其次用视频里的发布时间
+  const yearFromField = (plain(fields['时间'] || '').match(/\d{4}/) || [])[0]
+  const yearFromVideo = videos
+    .map((v) => (v.year ? (String(v.year).match(/\d{4}/) || [])[0] : null))
+    .find(Boolean)
+  const year = Number(yearFromField || yearFromVideo) || null
+
+  const readings = [plain(fields['读音'] || ''), plain(fields['音'] || '')].filter(Boolean)
 
   return {
-    creator: plain(fields['作成者'] || '') || null,
-    origin: plain(fields['本家'] || '') || null,
-    year: Number.isFinite(yearNum) && yearNum > 1900 ? yearNum : null,
+    creator,
+    origin,
+    year,
+    readings,
     videos: videos.map((v) => ({
       kind: v.kind,
       performer: v.performer,
@@ -232,9 +273,10 @@ function parsePage(raw) {
     })),
     pitfalls: [
       ...videos.map((v) => v.note).filter(Boolean),
-      fields['参考对象'] ? `参考对象：${plain(fields['参考对象'])}` : '',
-      plain(fields['其他'] || ''),
+      plain(fields['参考对象'] || '') ? `参考对象：${plain(fields['参考对象'])}` : '',
       plain(fields['趣闻'] || ''),
+      plain(fields['其他'] || ''),
+      plain(fields['其他内容'] || '') ? `其他：${plain(fields['其他内容'])}` : '',
       plain(fields['备注'] || ''),
     ]
       .filter(Boolean)

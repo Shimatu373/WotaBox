@@ -292,7 +292,7 @@ export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) =>
     nameJa,
     nameZh: nameZh || null,
     nameRomaji: extra.nameRomaji || meta.nameRomaji || null,
-    aliases: extra.aliases || [],
+    aliases: extra.aliases?.length ? extra.aliases : meta.readings || [],
     series: SERIES_OVERRIDE[nameJa] || series || null,
     type: type || null,
     creator: extra.creator || meta.creator || null,
