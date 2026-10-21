@@ -98,8 +98,35 @@ const SERIES_OVERRIDE = {
 // [日文名, 中文译名, 系列, 技类型, 覆盖项?]
 const ROWS = [
   // ===== 蒼月剣系（三水）=====
-  ['蒼月剣', '苍月剑', '蒼月剣系', null, { id: 'sougatsuken' }],
-  ['蒼月剣 改', '苍月剑 改', '蒼月剣系', null, { id: 'sougatsuken-kai' }],
+  [
+    '蒼月剣',
+    '苍月剑',
+    '蒼月剣系',
+    null,
+    {
+      id: 'sougatsuken',
+      creator: '三水〈Mi3z_ui4s〉',
+      year: 2020,
+      videos: [
+        { kind: '系列技连', performer: '三水', time: '00:10', title: '【三水】蒼月剣系全般【自创技集合】', url: '=10.5' },
+      ],
+    },
+  ],
+  [
+    '蒼月剣 改',
+    '苍月剑 改',
+    '蒼月剣系',
+    null,
+    {
+      id: 'sougatsuken-kai',
+      creator: '三水〈Mi3z_ui4s〉',
+      year: 2020,
+      videos: [
+        { kind: '系列技连', performer: '三水', time: '00:33', title: '【三水】蒼月剣系全般【自创技集合】', url: '=32.9' },
+      ],
+      pitfalls: '三水本人提到这个技没去年打得好看，建议参考「疾走闪光」。',
+    },
+  ],
   [
     '蒼月剣舞',
     '苍月剑舞',
@@ -107,7 +134,7 @@ const ROWS = [
     null,
     {
       id: 'sougatsuken-mai',
-      creator: '三水',
+      creator: '三水〈Mi3z_ui4s〉',
       year: 2020,
       videos: [
         {
@@ -122,9 +149,49 @@ const ROWS = [
     },
   ],
   ['蒼月剣斬', '苍月剑斩', '蒼月剣系', null, { id: 'sougatsuken-zan' }],
-  ['蒼月剣·花吹雪', '苍月剑·花吹雪', '蒼月剣系', null, { id: 'sougatsuken-hanafubuki' }],
-  ['蒼月剣「終律」', '苍月剑「终律」', '蒼月剣系', null, { id: 'sougatsuken-shuuritsu' }],
-  ['蒼月剣「弧韵」', '苍月剑「弧韵」', '蒼月剣系', null, { id: 'sougatsuken-kouin' }],
+  [
+    '蒼月剣·花吹雪',
+    '苍月剑·花吹雪',
+    '蒼月剣系',
+    null,
+    {
+      id: 'sougatsuken-hanafubuki',
+      creator: '三水〈Mi3z_ui4s〉',
+      year: 2020,
+      videos: [
+        { kind: '系列技连', performer: '三水', time: '00:22', title: '【三水】蒼月剣系全般【自创技集合】', url: '=21.5' },
+      ],
+    },
+  ],
+  [
+    '蒼月剣「終律」',
+    '苍月剑「终律」',
+    '蒼月剣系',
+    null,
+    {
+      id: 'sougatsuken-shuuritsu',
+      creator: '三水〈Mi3z_ui4s〉',
+      year: 2020,
+      videos: [
+        { kind: '系列技连／披露', performer: '三水', time: '01:27', title: '【三水】蒼月剣系全般【自创技集合】', url: '=87.3' },
+      ],
+      pitfalls: '据 wiki：【終律】是【弧韵】的对应技。',
+    },
+  ],
+  [
+    '蒼月剣「弧韵」',
+    '苍月剑「弧韵」',
+    '蒼月剣系',
+    null,
+    {
+      id: 'sougatsuken-kouin',
+      creator: '芒果〈芒果MangoX〉',
+      videos: [
+        { kind: '系列技连／披露', performer: '三水', time: '01:00', title: '【三水】蒼月剣系全般【自创技集合】', url: '=59.7' },
+      ],
+      pitfalls: '本家（芒果）没有发布视频，wiki 引用的是三水在自创技合集里的演绎版 —— 注意别把它当成三水的原创。',
+    },
+  ],
   ['蒼月剣·乱桜舞', '苍月剑·乱樱舞', '蒼月剣系', null, { id: 'sougatsuken-ransakura' }],
   ['蒼月剣·狂桜斬', '苍月剑·狂樱斩', '蒼月剣系', null, { id: 'sougatsuken-kyousakura' }],
 
