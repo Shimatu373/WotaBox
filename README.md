@@ -10,6 +10,8 @@
 
 给 wota 艺打师的学习与练习工具箱。纯前端、离线可用，所有数据都存在你自己的设备上。
 
+> 开发笔记、关键决策与踩坑记录见 [docs/PROJECT-MEMORY.md](docs/PROJECT-MEMORY.md)。
+
 ## 功能
 
 | 模块 | 说明 |
