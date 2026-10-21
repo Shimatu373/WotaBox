@@ -17,7 +17,7 @@
 |---|---|
 | 线上 | <https://wotabox.pages.dev>（Cloudflare Pages） |
 | 源码 | <https://github.com/Shimatu373/WotaBox> |
-| APK | 本地已打 **`v0.8.0` 正式签名包**（4.32 MB，versionCode 8）；GitHub Releases 上仍是旧的 `v0.7.0`（debug 签名） |
+| APK | 已发布 `WotaBox-0.9.0.apk`（正式签名，4.44 MB）；线上 `wotabox.pages.dev` 同步为 v0.9.0 |
 | 技术栈 | Vue 3 + Vite 8；安卓用 Capacitor 打包 |
 
 > ⚠️ 本项目**不使用 GitHub Pages**。仓库里只有源码，`*.github.io` 地址跑不起来。
@@ -55,6 +55,7 @@
 | 数据全存 **localStorage** | 隐私 + 无后端；代价是必须靠备份 |
 | 技类型全留 **待确认** | wiki 没有这个维度，不臆测；计划日后由用户上传。目前只有金剛系三条由星沫查证标成「关西」 |
 | 难度分 **四档**（基础/进阶/专家/大师），用**色条**标在技名后 | 一眼扫出「这个技新手能不能上」；没用星星/数字是因为在长列表里不如一条颜色快。未评定的显示「比背景略亮」的灰条 —— **留白 ≠ 最低档** |
+| wiki 详情**按需加载**（32 个分块），主包只留搜索别名 | 619 条技的作成者/视频/要点塞进主包会让首屏 432KB；列表页根本用不到详情。现在 197KB，展开某个技才读它那一块（本地读盘，无网络请求） |
 | 安卓用**独立 keystore 签 release 包**（`keystore/wotabox-release.jks`，RSA 4096 / 36500 天） | debug 签名只能自用：签名不同无法覆盖安装，用户数据会丢，也没法长期推更新。密码放 `keystore.properties`，两者都 gitignore + 异地备份 |
 | 系列按**命名归族** | 除「蒼月剣系」「スネイク系」等有 wiki 官方分类外，其余是按命名整理，非权威 |
 

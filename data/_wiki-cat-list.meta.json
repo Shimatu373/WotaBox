@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-10-21T22:37:46.1536355+08:00",
+  "source_page": "https://wotagei.huijiwiki.com/wiki/%E5%88%86%E7%B1%BB:%E6%8A%80",
+  "api_endpoint": "https://wotagei.huijiwiki.com/api.php?action=query&list=categorymembers&cmtitle=Category:%E6%8A%80&cmlimit=500&format=json",
+  "api_pages_fetched": 2,
+  "api_continue_used": true,
+  "api_continue_token": "page|5849414e20585545205a484f4e47205a48454e205849414e20585545205a484f4e47205a48454e|1329",
+  "category_total_members": 620,
+  "namespace_counts": {
+    "0": 618,
+    "10": 2
+  },
+  "excluded_ns10": [
+    "模板:技之",
+    "模板:技之/doc"
+  ],
+  "output_total": 618,
+  "output_file": "data/_wiki-cat-list.txt",
+  "html_pages_fetched": 4,
+  "pageids": null,
+  "pageids_note": "未包含：本机网络对本站全站返回 403（curl/Invoke-WebRequest 均被拦），只能经 web_fetch 读取；620 条 pageid 需逐条转写，易引入人工错误，故留空。",
+  "fetch_notes": "第 4 页首次抓取返回 HTTP 403（限流「请稍候」），等待约 45 秒后重试成功；最终无缺失页。"
+}

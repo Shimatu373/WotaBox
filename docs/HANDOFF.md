@@ -50,6 +50,10 @@
 | **（第三场）解析器又修 7 个坑** | ✅ `{{链接}}`、URL 占位置、占位文字当时间、变体作成者、标题≠技名、颜色模板、裸 BV 号（详见第五节） |
 | **（第三场）未分类 156 条扫完** | ✅ 抓到 154 条（2 条 404）。**有作成者 101→248、有视频 231**（wiki 命中 258 条）；只剩 27 条 wiki 本身没数据 |
 | **（第三场）入库前校验脚本** | ✅ `scripts/qa-wiki-raw.mjs`：批量抓取最怕「A 页正文写到 B 标题下」，这个脚本比对 `原=` 与标题、查重复 title / 重复技名 / 空 raw |
+| **（第四场）全量导入** | ✅ 浏览器导出 618 页 → 技 278→619、系列 25→52、有作成者 556 / 有视频 542 |
+| **（第四场）元数据按需加载** | ✅ 主包 432KB→197KB（gzip 134→76KB），详情拆成 32 个分块，展开技时才加载 |
+| **（第四场）发版** | ✅ `v0.9.0`：GitHub Release（`WotaBox-0.9.0.apk` 4.44MB）+ Cloudflare Pages Production 已部署 |
+| **（第四场）社团分工清单** | ✅ `docs/未分类技-待归类.csv`（330 条，带 wiki 链接与系列名线索，UTF-8 BOM 可直接用 Excel 开） |
 | **（第三场）新增 3 个流水线脚本** | ✅ `wiki-missing-urls.mjs` / `merge-wiki-raw.mjs` / `report-meta.mjs`，下次补数据不用再手搓 |
 
 **重要数据发现**（都已写进数据，别再重复查）：
@@ -68,9 +72,9 @@
 
 | 项 | 值 |
 |---|---|
-| 提交数 | **38**（本轮提交后同步） |
-| 线上 | <https://wotabox.pages.dev> —— 已含「个人技池」 |
-| APK | `v0.8.0` **已打本地签名包**：`android\app\build\outputs\apk\release\app-release.apk`（4.32 MB、versionCode 8）；**还没发到 GitHub Releases**；数据在打完包后又有更新，发布前需重打 |
+| 提交数 | **45**（本轮提交后同步） |
+| 线上 | <https://wotabox.pages.dev> —— **已部署 v0.9.0**（Production，commit c1d7e59） |
+| APK | **`v0.9.0` 已发布到 GitHub Releases**：`WotaBox-0.9.0.apk`（4.44 MB、versionCode 9、正式签名）→ <https://github.com/Shimatu373/WotaBox/releases/tag/v0.9.0> |
 | 签名 | `keystore/wotabox-release.jks`（PKCS12 / RSA 4096 / 36500 天，别名 `wotabox`）；证书 SHA-256 `E7:54:C3:C0:F4:87:80:38:60:34:46:E7:B6:82:03:BE:8A:4B:1D:9B:46:77:57:CE:F2:40:F4:3E:1F:21:CA:2F` |
 | 环境变量 | ✅ `JAVA_HOME` / `ANDROID_HOME` / `GRADLE_USER_HOME` 已 `setx` 永久化 |
 | 技数据 | **619 技 / 52 系列**；556 个有作成者（90%）、542 个有视频（88%）；wiki 词条命中 616 条。未分类 330 条（自动归类只认「组内 ≥2 条」） |
@@ -81,8 +85,7 @@
 
 ## 四、⚠️ 已知隐患
 
-1. **GitHub Releases 上还是 v0.7.0，新签名包只在本地**：`v0.8.0` 的 release APK 已打好（含个人技池 + 新数据），但还没上传，老用户下到的仍是旧包。
-   ⚠️ 另外：这次把签名从 debug 换成了正式 keystore，**签名不同不能覆盖安装**，已装 v0.7.0 的人必须先卸载再装（或提示他们导出备份后再卸，localStorage 会一起没）。
+1. **老用户升级路径**：线上与 Release 都是 `v0.9.0`（正式签名）。从 `v0.7.0`（debug 签名）升上来的必须**先导出备份 → 卸载 → 再装**，否则装不上、卸载会清收藏夹。Release 说明里已经写了这条。
 2. **本 profile 的原生压缩被关了**：`compaction-basic` / `command-compact` 运行时都是 `inactive`（Context Windows 插件的补丁所致）。
    → 普通预设的会话**满了不会自动摘要**，只能开新会话。别在长会话里硬撑。
 3. **Context Windows 插件在 cordis / standard 等预设下完全不生效**（2026-10-21 二次会话查实）：
@@ -104,7 +107,7 @@
 |---|---|---|
 | **P0** | ~~正式签名 release APK + 保管 keystore~~ | ✅ 2026-10-21 完成：`keystore/wotabox-release.jks` + `keystore.properties`（均已 gitignore），另存一份在 `C:\Users\LENOVO\Documents\wotabox-keystore-backup\`。**还要自己再拷一份到移动硬盘/网盘** |
 | **P0** | ~~环境变量永久化~~ | ✅ 已 `setx`，见第一节 |
-| **P1** | 把 `v0.8.0` 传到 GitHub Releases | 本地包已就绪：`android\app\build\outputs\apk\release\app-release.apk`；记得在说明里写「旧 debug 版需卸载重装」 |
+| **P1** | ~~把 v0.8.0 传到 GitHub Releases~~ | ✅ 改成直接发 `v0.9.0`（含全量数据 + 难度分级 + 按需加载），资产名 `WotaBox-0.9.0.apk` |
 | **P1** | ~~继续补元数据~~ | ✅ 2026-10-21 全部扫完：14 个系列 + 未分类 156 条；275 技中 248 有作成者。剩下 27 条是 wiki 本身无数据，别再重复抓（清单见 PROJECT-MEMORY 第四节） |
 | **P1** | ~~把「分类:技」全量导入~~ | ✅ 2026-10-21 完成：浏览器导出 618 页 → 入库 616 条，技 278 → **619**；系列 25 → 52 |
 | **P1** | 未分类 330 条继续归类 | 自动归类（`propose-series.mjs`）只认 wiki 系列名且组内 ≥2 条。剩下的要么 wiki 没写系列名，要么是独苗，需要人工判断——这是接下来最占时间的活 |
