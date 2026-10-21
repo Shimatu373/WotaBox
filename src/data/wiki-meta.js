@@ -6022,6 +6022,92 @@ export const WIKI_META = {
       "梅塔特隆系",
       "三水"
     ]
+  },
+  "二羽樱": {
+    "creator": "村雨",
+    "origin": "村雨",
+    "year": 2016,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "村雨",
+        "time": "11:32",
+        "title": "【Wota艺】Ex Light & Bass 2020",
+        "url": "https://www.bilibili.com/video/BV1zf4y1B7nF?t=692"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "二羽系",
+    "tags": [
+      "村雨",
+      "二羽系"
+    ]
+  },
+  "二羽鹤": {
+    "creator": "村雨",
+    "origin": "村雨",
+    "year": 2016,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "村雨",
+        "time": "11:43",
+        "title": "【Wota艺】Ex Light & Bass 2020",
+        "url": "https://www.bilibili.com/video/BV1zf4y1B7nF?t=703"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "二羽系",
+    "tags": [
+      "村雨",
+      "二羽系"
+    ]
+  },
+  "DeG": {
+    "creator": "Perikan",
+    "origin": "Perikan",
+    "year": 2018,
+    "readings": [
+      "Degu"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Perikan",
+        "time": "06:00",
+        "title": "【Perikan】オリジナル技大全【ヲタ芸】",
+        "url": "https://www.bilibili.com/video/BV1TX4y1o7H7?t=360"
+      },
+      {
+        "kind": "解说",
+        "performer": "Hako",
+        "time": null,
+        "title": "四分钟学会WOTA艺技-DeG【成长领域-白狐Hako】",
+        "url": "https://www.bilibili.com/video/BV1Hn4y19797/"
+      },
+      {
+        "kind": "技连",
+        "performer": "Gear",
+        "time": "09:44",
+        "title": "【全141種】ヲタ芸最後ノ技'超絶'大全集",
+        "url": "https://www.bilibili.com/video/BV14Z42147fx?t=584.4"
+      },
+      {
+        "kind": "技连",
+        "performer": "Perikan",
+        "time": "06:20",
+        "title": "WOTA艺的技 特別大全集！！2019",
+        "url": "https://www.bilibili.com/video/BV1UJ411r7bT?t=379.5"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": null,
+    "tags": [
+      "2018年",
+      "Perikan"
+    ]
   }
 }
 

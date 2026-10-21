@@ -28,6 +28,7 @@
  */
 
 import { IMPORTED, IMPORTED_SERIES } from './waza-imported.js'
+import { WIKI_ADDED, WIKI_ADDED_TITLES } from './waza-wiki-extra.js'
 import WIKI_META from './wiki-meta.js'
 import { DIFFICULTY } from './difficulty.js'
 
@@ -287,8 +288,12 @@ function hashId(str) {
   return 'w' + (h >>> 0).toString(36)
 }
 
-// 手写的优先；导入数据里同名的不重复加入
-const ALL_ROWS = [...ROWS, ...IMPORTED.filter((r) => !ROWS.some((c) => c[0] === r[0]))]
+// 手写的优先；导入数据里同名的不重复加入；wiki 批量导入的（WIKI_ADDED）最后兜底
+const ALL_ROWS = [
+  ...ROWS,
+  ...IMPORTED.filter((r) => !ROWS.some((c) => c[0] === r[0])),
+  ...WIKI_ADDED.filter((r) => !ROWS.some((c) => c[0] === r[0]) && !IMPORTED.some((c) => c[0] === r[0])),
+]
 
 export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) => {
   // wiki 批量导入的元数据（scripts/import-wiki-raw.mjs 生成）作为兜底
