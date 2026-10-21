@@ -19,3 +19,7 @@ keystore/
 *.jks
 *.keystore
 keystore.properties
+
+# wiki 抓取的中间产物（体积大、可重新生成；规范化后的源头是 data/wiki-raw.jsonl）
+data/wiki-pages.json
+data/_missing-list.txt

@@ -11,6 +11,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { WAZA } from '../src/data/waza.js'
+import { WIKI_ADDED } from '../src/data/waza-wiki-extra.js'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const RAW = join(ROOT, 'data', 'wiki-raw.jsonl')
@@ -21,7 +22,10 @@ const recs = readFileSync(RAW, 'utf8')
   .filter((l) => l.trim())
   .map((l) => JSON.parse(l))
 
-const known = new Set(WAZA.map((w) => w.nameJa))
+// 注意：本脚本的产物会被 waza.js 消费。所以「已有」只能算人手写的 ROWS / IMPORTED，
+// 不能把它自己上一轮生成的那些也算进去，否则第二次运行会认为都导过了 → 把文件清空（自噬）。
+const autoNames = new Set(WIKI_ADDED.map((r) => r[0]))
+const known = new Set(WAZA.map((w) => w.nameJa).filter((n) => !autoNames.has(n)))
 const jsStr = (s) => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
 
 const rows = []

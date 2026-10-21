@@ -25,6 +25,29 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const OUT_JS = join(ROOT, 'src', 'data', 'series-auto.js')
 const OUT_MD = join(ROOT, 'docs', 'series-proposal.md')
 
+/** 简繁/异体字的归一：只用于**比较**，显示时仍用出现最多的那种写法 */
+const SERIES_FOLD = {
+  鹤: '鶴',
+  龙: '龍',
+  鸟: '鳥',
+  兰: '蘭',
+  纹: '紋',
+  剑: '剣',
+  华: '華',
+  梦: '夢',
+  阳: '陽',
+  云: '雲',
+  发: '發',
+  炼: '煉',
+  狱: '獄',
+  万: '萬',
+  无: '無',
+  双: '雙',
+}
+function foldSeries(s) {
+  return [...String(s)].map((c) => SERIES_FOLD[c] || c).join('')
+}
+
 /** wiki 系列名 → 我们的系列名 */
 function normalizeSeries(sj) {
   const s = String(sj || '')
@@ -33,11 +56,14 @@ function normalizeSeries(sj) {
     .replace(/^[『「【]+|[』」】]+$/g, '')
     .trim()
   if (!s) return null
+  // 彩色文字/符号堆出来的垃圾系列名：宁可不归类，也别造一个看不懂的系列
+  if (/[⚖★☆♪♯]/.test(s) || s.length > 14) return null
   if (/系$/.test(s)) return s
   return s + '系'
 }
 
-const groups = new Map()
+// 先按「简繁归一后的名字」分组，组内再统计哪种写法出现得多 —— 显示时用多的那种
+const rawGroups = new Map()
 const noSeriesName = []
 /** 已被「人」归类过（手写 ROWS / waza-imported / SERIES_OVERRIDE）的技 */
 const handAssigned = (w) => Boolean(w.series) && !SERIES_AUTO[w.nameJa]
@@ -52,23 +78,40 @@ for (const w of WAZA) {
     noSeriesName.push(w.nameJa)
     continue
   }
-  if (!groups.has(sj)) groups.set(sj, [])
-  groups.get(sj).push(w)
+  const fold = foldSeries(sj)
+  if (!rawGroups.has(fold)) rawGroups.set(fold, new Map())
+  const variants = rawGroups.get(fold)
+  if (!variants.has(sj)) variants.set(sj, [])
+  variants.get(sj).push(w)
+}
+
+// fold → { series(显示名), list(合并后的成员) }
+const groups = new Map()
+for (const [fold, variants] of rawGroups) {
+  let best = null
+  for (const [name, list] of variants) {
+    if (!best || list.length > best.list.length) best = { series: name, list }
+  }
+  // 把其它写法的成员并进来（简繁混用的情况：鹤望兰系 / 鶴望蘭系）
+  const merged = []
+  for (const [, list] of variants) merged.push(...list)
+  groups.set(fold, { series: best.series, list: merged })
 }
 
 // 现有系列只看人手写的，避免把自动生成的也当「已有」
 const existing = new Set(WAZA.filter(handAssigned).map((w) => w.series))
+const existingFold = new Set([...existing].map(foldSeries))
 
 const accepted = []
 const singles = []
-for (const [sj, list] of [...groups.entries()].sort((a, b) => b[1].length - a[1].length)) {
-  if (list.length < 2) {
-    singles.push([sj, list])
+for (const [, g] of [...groups.entries()].sort((a, b) => b[1].list.length - a[1].list.length)) {
+  if (g.list.length < 2) {
+    singles.push([g.series, g.list])
     continue
   }
-  const creators = new Set(list.map((w) => w.creator).filter(Boolean))
+  const creators = new Set(g.list.map((w) => w.creator).filter(Boolean))
   const origin = creators.size === 1 ? [...creators][0] : null
-  accepted.push({ series: sj, list, origin, isNew: !existing.has(sj) })
+  accepted.push({ series: g.series, list: g.list, origin, isNew: !existingFold.has(foldSeries(g.series)) })
 }
 
 // ---- 生成机器可用的映射 ----

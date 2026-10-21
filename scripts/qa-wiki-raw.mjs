@@ -7,12 +7,22 @@
  *
  * 用法：node scripts/qa-wiki-raw.mjs
  */
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
 const RAW_FILE = join(ROOT, 'data', 'wiki-raw.jsonl')
+const CAT_FILE = join(ROOT, 'data', '_wiki-cat-list.txt')
+
+/** 权威标题清单（分类:技 的当前成员）。有它就能区分「抓错页」和「wiki 自己写得不一致」 */
+const canonical = new Set()
+if (existsSync(CAT_FILE)) {
+  for (const line of readFileSync(CAT_FILE, 'utf8').split(/\r?\n/)) {
+    const t = line.trim()
+    if (t) canonical.add(t)
+  }
+}
 
 const lines = readFileSync(RAW_FILE, 'utf8')
   .split(/\r?\n/)
@@ -81,6 +91,7 @@ function sameWaza(a, b) {
 }
 
 let bad = 0
+const warns = []
 const seenTitle = new Set()
 const seenKey = new Map()
 
@@ -117,8 +128,13 @@ for (const [i, line] of lines.entries()) {
   const gen = normName(pickOriginal(raw))
   const expected = normName(key)
   if (!sameWaza(gen, expected)) {
-    console.log(`标题与正文不匹配？${title}\n    标题推出：${expected}\n    正文 原=：${gen}`)
-    bad++
+    // 标题本身就在权威清单里 → 这页确实是从它抓的，差异属于 wiki 自己写得不一致（警告即可）
+    if (canonical.has(title)) {
+      warns.push(`${title}：标题推出「${expected}」，但正文 原=「${gen}」`)
+    } else {
+      console.log(`标题与正文不匹配？${title}\n    标题推出：${expected}\n    正文 原=：${gen}`)
+      bad++
+    }
   }
   if (seenKey.has(key) && seenKey.get(key) !== title) {
     console.log(`技名 ${key} 挂在多个标题下：${seenKey.get(key)} / ${title}`)
@@ -127,6 +143,10 @@ for (const [i, line] of lines.entries()) {
   seenKey.set(key, title)
 }
 
-console.log(`\n共 ${lines.length} 条，问题 ${bad} 处`)
+console.log(`\n共 ${lines.length} 条，问题 ${bad} 处，警告 ${warns.length} 处`)
+if (warns.length) {
+  console.log('\n警告（wiki 自己写得前后不一致，不影响入库，留档备查）：')
+  for (const w of warns) console.log('  · ' + w)
+}
 console.log(bad === 0 ? 'OK jsonl 一致性通过' : 'FAIL 请修掉上面这些再入库')
 process.exit(bad === 0 ? 0 : 1)

@@ -178,6 +178,8 @@ function plain(text) {
     .replace(/\[https?:\/\/[^\s\]]+\s+([^\]]+)\]/g, '$1')
     .replace(/\[https?:\/\/[^\]]+\]/g, '')
     .replace(/<br\s*\/?>/gi, ' ')
+    // 剩下的 HTML 标签一律剥掉（wiki 有彩色文字模板，会吐出 <span style="…">）
+    .replace(/<\/?[a-zA-Z][^>]*>/g, '')
     .replace(/'''?/g, '')
     .replace(/\s+/g, ' ')
     .trim()
