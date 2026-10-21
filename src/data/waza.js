@@ -21,6 +21,7 @@
  */
 
 import { IMPORTED, IMPORTED_SERIES } from './waza-imported.js'
+import WIKI_META from './wiki-meta.js'
 
 /** 技类型定义 */
 export const TYPE_DEF = {
@@ -281,24 +282,30 @@ function hashId(str) {
 // 手写的优先；导入数据里同名的不重复加入
 const ALL_ROWS = [...ROWS, ...IMPORTED.filter((r) => !ROWS.some((c) => c[0] === r[0]))]
 
-export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) => ({
-  id: extra.id || hashId(nameJa),
-  nameJa,
-  nameZh: nameZh || null,
-  nameRomaji: extra.nameRomaji || null,
-  aliases: extra.aliases || [],
-  series: SERIES_OVERRIDE[nameJa] || series || null,
-  type: type || null,
-  creator: extra.creator || null,
-  year: extra.year || null,
-  bars: extra.bars ?? null,
-  tags: extra.tags || [],
-  videos: extra.videos || [],
-  // 与 wiki 词条标题约定一致：日文名〈中文译名〉
-  wiki: extra.wiki || (nameZh ? `${nameJa}〈${nameZh}〉` : nameJa),
-  pitfalls: extra.pitfalls || '',
-  difficulty: extra.difficulty ?? null,
-}))
+export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) => {
+  // wiki 批量导入的元数据（scripts/import-wiki-raw.mjs 生成）作为兜底
+  // 手写 extra 里显式写过的字段优先，不会被覆盖
+  const meta = WIKI_META[nameJa] || {}
+
+  return {
+    id: extra.id || hashId(nameJa),
+    nameJa,
+    nameZh: nameZh || null,
+    nameRomaji: extra.nameRomaji || meta.nameRomaji || null,
+    aliases: extra.aliases || [],
+    series: SERIES_OVERRIDE[nameJa] || series || null,
+    type: type || null,
+    creator: extra.creator || meta.creator || null,
+    year: extra.year || meta.year || null,
+    bars: extra.bars ?? null,
+    tags: extra.tags?.length ? extra.tags : meta.tags || [],
+    videos: extra.videos?.length ? extra.videos : meta.videos || [],
+    // 与 wiki 词条标题约定一致：日文名〈中文译名〉
+    wiki: extra.wiki || (nameZh ? `${nameJa}〈${nameZh}〉` : nameJa),
+    pitfalls: extra.pitfalls || meta.pitfalls || '',
+    difficulty: extra.difficulty ?? null,
+  }
+})
 
 /** 中文WOTA艺wiki 的词条链接（按标题编码生成） */
 export function wikiUrl(title) {
