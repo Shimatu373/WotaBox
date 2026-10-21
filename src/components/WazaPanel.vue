@@ -15,8 +15,23 @@ import {
 const keyword = ref('')
 const activeSeries = ref('全部')
 const expandedId = ref(null)
+// 难度筛选：多选，空数组 = 不过滤。'unknown' 代表「待评定」
+const activeDiffs = ref([])
 
 const seriesList = computed(() => ['全部', ...allSeries()])
+
+const diffChips = computed(() => [
+  ...DIFFICULTY_ORDER.map((k) => ({ key: k, ...DIFFICULTY_DEF[k] })),
+  { key: 'unknown', ...difficultyMeta(null) },
+])
+
+const diffKeyOf = (w) => w.difficulty || 'unknown'
+
+function toggleDiff(key) {
+  activeDiffs.value = activeDiffs.value.includes(key)
+    ? activeDiffs.value.filter((k) => k !== key)
+    : [...activeDiffs.value, key]
+}
 
 // 「全部」时按系列归组，方便在几十个技里扫读
 const groupedFiltered = computed(() => {
@@ -46,6 +61,7 @@ const filtered = computed(() => {
   const kw = keyword.value.trim().toLowerCase()
   return WAZA.filter((w) => {
     if (activeSeries.value !== '全部' && (w.series || '未分类') !== activeSeries.value) return false
+    if (activeDiffs.value.length && !activeDiffs.value.includes(diffKeyOf(w))) return false
     if (!kw) return true
     const haystack = [w.nameJa, w.nameRomaji, w.nameZh, w.series, ...(w.aliases || [])]
       .filter(Boolean)
@@ -96,17 +112,31 @@ function seriesMeta(name) {
       {{ seriesMeta(activeSeries).note }}
     </p>
 
-    <p class="count">共 {{ filtered.length }} 条</p>
+    <div class="chips diff-chips">
+      <button
+        class="chip"
+        :class="{ on: !activeDiffs.length }"
+        type="button"
+        @click="activeDiffs = []"
+      >
+        难度：全部
+      </button>
+      <button
+        v-for="d in diffChips"
+        :key="d.key"
+        class="chip dchip"
+        :class="{ on: activeDiffs.includes(d.key) }"
+        :style="
+          activeDiffs.includes(d.key) ? { borderColor: d.color, color: d.text } : null
+        "
+        type="button"
+        @click="toggleDiff(d.key)"
+      >
+        <i class="lg-bar" :style="{ background: d.color }" />{{ d.label }}
+      </button>
+    </div>
 
-    <p class="diff-legend">
-      <span class="lg-title">难度</span>
-      <span v-for="k in DIFFICULTY_ORDER" :key="k" class="lg">
-        <i class="lg-bar" :style="{ background: DIFFICULTY_DEF[k].color }" />{{ DIFFICULTY_DEF[k].label }}
-      </span>
-      <span class="lg">
-        <i class="lg-bar" :style="{ background: difficultyMeta(null).color }" />待评定
-      </span>
-    </p>
+    <p class="count">共 {{ filtered.length }} 条</p>
 
     <ul v-if="groupedFiltered.length" class="list">
       <li v-for="w in groupedFiltered" :key="w.id" class="item" :class="{ open: expandedId === w.id, 'has-head': w.showHead }">
@@ -330,25 +360,21 @@ function seriesMeta(name) {
   color: #5f728c;
 }
 
-/* 难度图例：四档 + 待评定 */
-.diff-legend {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  margin: 0 0 10px;
-  font-size: 10px;
-  color: #6b7f9c;
+/* 难度筛选 chip：色条 + 文字 */
+.diff-chips {
+  margin-bottom: 8px;
 }
 
-.lg-title {
-  color: #5f728c;
-}
-
-.lg {
+.dchip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+}
+
+/* 选中态用难度自己的颜色描边，避免和系列 chip 的蓝底撞色 */
+.dchip.on {
+  background: #16233c;
+  font-weight: 600;
 }
 
 .lg-bar {
@@ -356,6 +382,7 @@ function seriesMeta(name) {
   width: 3px;
   height: 11px;
   border-radius: 2px;
+  flex: none;
 }
 
 .diff-dd {
