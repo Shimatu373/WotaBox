@@ -13,3 +13,9 @@ path-backup-*.txt
 *.apk
 __pycache__/
 *.pyc
+
+# 签名密钥：绝不入库（丢了就没法给老用户推更新，见 keystore/README.txt）
+keystore/
+*.jks
+*.keystore
+keystore.properties

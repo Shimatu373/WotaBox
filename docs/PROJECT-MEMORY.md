@@ -17,7 +17,7 @@
 |---|---|
 | 线上 | <https://wotabox.pages.dev>（Cloudflare Pages） |
 | 源码 | <https://github.com/Shimatu373/WotaBox> |
-| APK | GitHub Releases `v0.7.0`（debug 签名，5.4 MB） |
+| APK | 本地已打 **`v0.8.0` 正式签名包**（4.32 MB，versionCode 8）；GitHub Releases 上仍是旧的 `v0.7.0`（debug 签名） |
 | 技术栈 | Vue 3 + Vite 8；安卓用 Capacitor 打包 |
 
 > ⚠️ 本项目**不使用 GitHub Pages**。仓库里只有源码，`*.github.io` 地址跑不起来。
@@ -53,6 +53,7 @@
 | 安卓走 **Capacitor APK** | 国内 WebAPK 要访问 Google 服务器，装不上；APK 完全绕开 |
 | 数据全存 **localStorage** | 隐私 + 无后端；代价是必须靠备份 |
 | 技类型全留 **待确认** | wiki 没有这个维度，不臆测；计划日后由用户上传 |
+| 安卓用**独立 keystore 签 release 包**（`keystore/wotabox-release.jks`，RSA 4096 / 36500 天） | debug 签名只能自用：签名不同无法覆盖安装，用户数据会丢，也没法长期推更新。密码放 `keystore.properties`，两者都 gitignore + 异地备份 |
 | 系列按**命名归族** | 除「蒼月剣系」「スネイク系」等有 wiki 官方分类外，其余是按命名整理，非权威 |
 
 ---
@@ -122,8 +123,9 @@ npm run build && npm run deploy    # 构建并发布
 
 | 优先级 | 事项 | 备注 |
 |---|---|---|
-| 高 | 正式签名的 release APK + 保管 keystore | 现在只有 debug 签名 |
-| 高 | 环境变量永久化 | `JAVA_HOME` / `ANDROID_HOME` / `GRADLE_USER_HOME`（当前只在会话里设过） |
+| 高 | ~~正式签名的 release APK + 保管 keystore~~ ✅ 2026-10-21 | keystore 已生成、`build.gradle` 已配；备份在 `Documents\wotabox-keystore-backup\`，**还需再拷一份到移动硬盘/网盘** |
+| 高 | ~~环境变量永久化~~ ✅ 2026-10-21 | `JAVA_HOME` / `ANDROID_HOME` / `GRADLE_USER_HOME` 已 `setx` |
+| 高 | 把 `v0.8.0` 传到 GitHub Releases | 本地包 `android\app\build\outputs\apk\release\app-release.apk` 已就绪 |
 | 中 | Cloudflare Pages 接 Git 自动部署 | 现在 push 后要手动 `npm run deploy` |
 | 中 | `你知道吗` 板块 | 纯内容，最快出成果 |
 | 中 | 视频对比器 | 有"平台视频无法帧同步"的硬约束 |
