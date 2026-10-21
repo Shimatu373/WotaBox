@@ -245,6 +245,7 @@ function parsePage(raw) {
   }
 
   const tags = [...raw.matchAll(/\[\[(?:分类|Category):([^\]|]+)\]\]/g)].map((m) => m[1].trim())
+  if (String(fields['国人技'] || '').includes('是')) tags.push('国人技')
 
   const creator = plain(fields['作成者'] || '') || null
   let origin = plain(fields['本家'] || '') || null

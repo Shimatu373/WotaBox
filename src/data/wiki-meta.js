@@ -237,6 +237,178 @@ export const WIKI_META = {
       "宝可梦相关技",
       "Team MoB"
     ]
+  },
+  "不知火スネイク": {
+    "creator": "でゅな！",
+    "origin": null,
+    "year": 2020,
+    "readings": [
+      "Shiranui Snake"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "Latte",
+        "time": "01:10",
+        "title": "【らて】技-My favorite skill 2020- 【ヲタ芸】",
+        "url": "https://www.bilibili.com/video/BV1St4y1q7ct?t=70"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク",
+    "tags": [
+      "スネイク系",
+      "不知火系"
+    ]
+  },
+  "吹雪スネーク": {
+    "creator": "Yoruru",
+    "origin": "Yoruru",
+    "year": 2016,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技双",
+        "performer": "Yoruru",
+        "time": null,
+        "title": "【オリ技】吹雪スネーク→青龍の紋章",
+        "url": "https://youtu.be/TQ_sArfRV04?t=4"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク系",
+    "tags": [
+      "スネイク系",
+      "夜瞑",
+      "国人技",
+      "吹雪系"
+    ]
+  },
+  "春風スネイク": {
+    "creator": "rato",
+    "origin": "rato",
+    "year": 2019,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "rato",
+        "time": null,
+        "title": "【ヲタ芸】オリ技連_アイドル限定【ラト】【搬运】",
+        "url": "https://www.bilibili.com/video/BV14G4y1X7xd?t=170"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク",
+    "tags": [
+      "ラト",
+      "スネイク系"
+    ]
+  },
+  "永夜スネーク": {
+    "creator": null,
+    "origin": null,
+    "year": 2016,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "翔儿",
+        "time": "00:41",
+        "title": "【攻略組Hunters】副歌技大合集第二弹！！",
+        "url": "https://www.bilibili.com/video/BV1is411z7e6?t=40.6"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク",
+    "tags": [
+      "国人技"
+    ]
+  },
+  "野方スネイク": {
+    "creator": "Danchi",
+    "origin": "Danchi",
+    "year": 2019,
+    "readings": [
+      "Nogata Snake"
+    ],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "AXIS",
+        "time": "01:26",
+        "title": "【ヲタ芸】人生リセットボタンを激熱で打ったるぁぁぁぁぁ！！/GUMI【AXIS】",
+        "url": "https://youtu.be/XZD6jfC7H-E?t=86"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "野方",
+    "tags": [
+      "スネイク系"
+    ]
+  },
+  "迅速スネイク": {
+    "creator": "じゅん",
+    "origin": null,
+    "year": 2021,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "nanase",
+        "time": "00:16",
+        "title": "【WOTA艺】技单60发!!【Fly-N】（搬运）",
+        "url": "https://www.bilibili.com/video/av849727562?p=45&t=16.0"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク",
+    "tags": [
+      "迅速系",
+      "スネイク系"
+    ]
+  },
+  "迅スネ改": {
+    "creator": "nanase",
+    "origin": "nanase",
+    "year": 2021,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技连",
+        "performer": "nanase",
+        "time": "00:12",
+        "title": "【WOTA艺】技单60发!!【Fly-N】（搬运）",
+        "url": "https://www.bilibili.com/video/av849727562?p=44&t=12.0"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク",
+    "tags": [
+      "迅速系",
+      "スネイク系"
+    ]
+  },
+  "サ終スネ": {
+    "creator": null,
+    "origin": "Makki",
+    "year": 2025,
+    "readings": [],
+    "videos": [
+      {
+        "kind": "技单",
+        "performer": "Makki",
+        "time": null,
+        "title": "【WOTA/500tp】自创技技连【Makki】",
+        "url": "https://www.bilibili.com/video/BV1AiCBBBsEPT?t=17.5"
+      }
+    ],
+    "pitfalls": "",
+    "seriesJa": "スネイク系",
+    "tags": [
+      "Makki",
+      "スネイク系"
+    ]
   }
 }
 
