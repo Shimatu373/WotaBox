@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
+import DifficultyBar from './DifficultyBar.vue'
 import { WAZA } from '../data/waza.js'
 import {
   collections,
@@ -192,7 +193,7 @@ function deleteActive() {
           :style="{ borderColor: statusMeta(it.status).color }"
         >
           <div class="info">
-            <span class="ja">{{ it.waza.nameJa }}</span>
+            <span class="ja">{{ it.waza.nameJa }}<DifficultyBar :level="it.waza.difficulty" /></span>
             <span class="zh">{{ it.waza.nameZh || it.waza.nameRomaji }}</span>
           </div>
           <button
@@ -237,7 +238,7 @@ function deleteActive() {
           </div>
           <ul class="pool-list">
             <li v-for="x in poolGroups.proficient" :key="x.wazaId" class="pool-item gold">
-              <span class="pja">{{ x.waza.nameJa }}</span>
+              <span class="pja">{{ x.waza.nameJa }}<DifficultyBar :level="x.waza.difficulty" /></span>
               <span class="pzh">{{ x.waza.nameZh || x.waza.series || '' }}</span>
             </li>
           </ul>
@@ -250,7 +251,7 @@ function deleteActive() {
           </div>
           <ul class="pool-list">
             <li v-for="x in poolGroups.learned" :key="x.wazaId" class="pool-item blue">
-              <span class="pja">{{ x.waza.nameJa }}</span>
+              <span class="pja">{{ x.waza.nameJa }}<DifficultyBar :level="x.waza.difficulty" /></span>
               <span class="pzh">{{ x.waza.nameZh || x.waza.series || '' }}</span>
             </li>
           </ul>

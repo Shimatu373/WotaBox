@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
+import DifficultyBar from './DifficultyBar.vue'
 import { WAZA } from '../data/waza.js'
 import { choreoStore, clipsBySong, removeClip, toText, fmtClock } from '../composables/useChoreo.js'
 
@@ -61,7 +62,7 @@ function del(id, name) {
           <template v-for="(wid, k) in c.wazaIds" :key="k">
             <span class="wz">
               <span class="wz-idx">{{ k + 1 }}</span>
-              {{ nameOf(wid) }}
+              {{ nameOf(wid) }}<DifficultyBar :level="wazaMap[wid]?.difficulty" />
             </span>
             <span v-if="k < c.wazaIds.length - 1" class="arrow">→</span>
           </template>

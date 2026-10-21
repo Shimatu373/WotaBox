@@ -9,8 +9,12 @@
  *
  * 技类型 type：
  *   'kansai' 关西（红）  'huoba' 火把（蓝）  'mixed' 综合（紫）  null 待确认
- *   ⚠️ 目前全部为 null —— 这个分类需要有实际依据才能填，不做臆测。
- *      确认某个技属于哪一类时，把该行的第 4 项改成对应的 key 即可。
+ *   ⚠️ 默认全部留空 —— 这个分类需要有实际依据才能填，不做臆测。
+ *      目前只有金剛系三条（星沫查证）标成了 kansai，其余仍待确认。
+ *
+ * 难度 difficulty：
+ *   基础/进阶/专家/大师 四档，数据在 src/data/difficulty.js 的 DIFFICULTY 表里
+ *   （按日文名索引）。没核定的就是「待评定」，UI 上显示一条比背景略亮的灰条。
  *
  * 覆盖项（extra）可填：
  *   id nameRomaji creator year bars tags videos pitfalls difficulty wiki aliases
@@ -25,6 +29,7 @@
 
 import { IMPORTED, IMPORTED_SERIES } from './waza-imported.js'
 import WIKI_META from './wiki-meta.js'
+import { DIFFICULTY } from './difficulty.js'
 
 /** 技类型定义 */
 export const TYPE_DEF = {
@@ -306,7 +311,8 @@ export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) =>
     // 与 wiki 词条标题约定一致：日文名〈中文译名〉
     wiki: extra.wiki || (nameZh ? `${nameJa}〈${nameZh}〉` : nameJa),
     pitfalls: extra.pitfalls || meta.pitfalls || '',
-    difficulty: extra.difficulty ?? null,
+    // 难度：waza.js 里手写 > difficulty.js 的核定表 > 待评定（null）
+    difficulty: extra.difficulty ?? DIFFICULTY[nameJa] ?? null,
   }
 })
 

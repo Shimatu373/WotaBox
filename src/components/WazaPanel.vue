@@ -1,7 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
+import DifficultyBar from './DifficultyBar.vue'
 import { WAZA, SERIES_INFO, wikiUrl, allSeries, typeMeta } from '../data/waza.js'
+import { DIFFICULTY_DEF, DIFFICULTY_ORDER, difficultyMeta } from '../data/difficulty.js'
 import {
   collections,
   statusMeta,
@@ -96,6 +98,16 @@ function seriesMeta(name) {
 
     <p class="count">共 {{ filtered.length }} 条</p>
 
+    <p class="diff-legend">
+      <span class="lg-title">难度</span>
+      <span v-for="k in DIFFICULTY_ORDER" :key="k" class="lg">
+        <i class="lg-bar" :style="{ background: DIFFICULTY_DEF[k].color }" />{{ DIFFICULTY_DEF[k].label }}
+      </span>
+      <span class="lg">
+        <i class="lg-bar" :style="{ background: difficultyMeta(null).color }" />待评定
+      </span>
+    </p>
+
     <ul v-if="groupedFiltered.length" class="list">
       <li v-for="w in groupedFiltered" :key="w.id" class="item" :class="{ open: expandedId === w.id, 'has-head': w.showHead }">
         <div v-if="w.showHead" class="group-head">
@@ -105,7 +117,7 @@ function seriesMeta(name) {
 
         <button class="row" type="button" :aria-expanded="expandedId === w.id" @click="toggle(w.id)">
           <span class="names">
-            <span class="ja">{{ w.nameJa }}</span>
+            <span class="ja">{{ w.nameJa }}<DifficultyBar :level="w.difficulty" /></span>
             <span class="sub">
               <span v-if="w.nameZh" class="zh">{{ w.nameZh }}</span>
               <span v-if="w.nameRomaji" class="romaji">{{ w.nameRomaji }}</span>
@@ -144,7 +156,12 @@ function seriesMeta(name) {
                 </div>
                 <div>
                   <dt>难度</dt>
-                  <dd>{{ w.difficulty ? '★'.repeat(w.difficulty) : '待评定' }}</dd>
+                  <dd class="diff-dd">
+                    <DifficultyBar :level="w.difficulty" tall />
+                    <span :style="{ color: difficultyMeta(w.difficulty).text }">{{
+                      difficultyMeta(w.difficulty).label
+                    }}</span>
+                  </dd>
                 </div>
                 <div>
                   <dt>技类型</dt>
@@ -303,6 +320,40 @@ function seriesMeta(name) {
   margin: 0 0 10px;
   font-size: 11px;
   color: #5f728c;
+}
+
+/* 难度图例：四档 + 待评定 */
+.diff-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0 0 10px;
+  font-size: 10px;
+  color: #6b7f9c;
+}
+
+.lg-title {
+  color: #5f728c;
+}
+
+.lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lg-bar {
+  display: inline-block;
+  width: 3px;
+  height: 11px;
+  border-radius: 2px;
+}
+
+.diff-dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .list {

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
+import DifficultyBar from './DifficultyBar.vue'
 import { useAudioPlayer } from '../composables/useAudioPlayer.js'
 import { clipsOfSong, addClip, removeClip } from '../composables/useChoreo.js'
 import { WAZA } from '../data/waza.js'
@@ -348,7 +349,7 @@ function delClip(clip) {
               <ul class="pick-list">
                 <li v-for="w in pickList" :key="w.id">
                   <button type="button" @click="pickWaza(w.id)">
-                    <span class="pk-ja">{{ w.nameJa }}</span>
+                    <span class="pk-ja">{{ w.nameJa }}<DifficultyBar :level="w.difficulty" /></span>
                     <span class="pk-zh">{{ w.nameZh || w.series || '' }}</span>
                   </button>
                 </li>
