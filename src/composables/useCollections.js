@@ -194,6 +194,25 @@ export function collectionsOfWaza(wazaId) {
   return store.collections.filter((c) => c.items.some((i) => i.wazaId === wazaId))
 }
 
+/**
+ * 个人技池：汇总所有收藏夹，只取「已习得 / 已上手」
+ * 同一技在多个收藏夹里有不同状态时取最高的那个
+ */
+export function poolOf() {
+  const map = new Map()
+  for (const c of store.collections) {
+    for (const item of c.items) {
+      const rank = STATUS_DEF.findIndex((s) => s.key === item.status)
+      const prev = map.get(item.wazaId)
+      if (!prev || rank > prev.rank) {
+        map.set(item.wazaId, { wazaId: item.wazaId, status: item.status, rank })
+      }
+    }
+  }
+  // rank > 0 即排除「未掌握」
+  return [...map.values()].filter((x) => x.rank > 0)
+}
+
 export function statsOf(collId) {
   const counts = { unlearned: 0, learned: 0, proficient: 0 }
   const c = findCollection(collId)

@@ -12,8 +12,10 @@ import {
   removeWaza,
   cycleStatus,
   statsOf,
+  poolOf,
 } from '../composables/useCollections.js'
 
+const mode = ref('collections') // collections | pool
 const activeId = ref(collections[0]?.id ?? 'fav')
 const creating = ref(false)
 const newName = ref('')
@@ -41,7 +43,24 @@ function pct(n) {
   return total.value ? (n / total.value) * 100 : 0
 }
 
+
+const poolGroups = computed(() => {
+  const byId = wazaMap.value
+  const all = poolOf()
+    .map((x) => ({ ...x, waza: byId[x.wazaId] }))
+    .filter((x) => x.waza)
+  const byName = (a, b) => a.waza.nameJa.localeCompare(b.waza.nameJa, 'ja')
+  return {
+    proficient: all.filter((x) => x.status === 'proficient').sort(byName),
+    learned: all.filter((x) => x.status === 'learned').sort(byName),
+  }
+})
+
 const summary = computed(() => {
+  if (mode.value === 'pool') {
+    const { proficient, learned } = poolGroups.value
+    return `${proficient.length} 已上手 · ${learned.length} 已习得`
+  }
   const n = collections.reduce((s, c) => s + c.items.length, 0)
   return `${collections.length} 个收藏夹 · ${n} 条记录`
 })
@@ -84,7 +103,20 @@ function deleteActive() {
 
 <template>
   <CollapsibleCard id="favorites" title="收藏夹" :summary="summary" :default-open="false">
-    <div class="chips">
+    <div class="tabs">
+      <button
+        class="tab"
+        :class="{ on: mode === 'collections' }"
+        type="button"
+        @click="mode = 'collections'"
+      >
+        收藏夹
+      </button>
+      <button class="tab" :class="{ on: mode === 'pool' }" type="button" @click="mode = 'pool'">
+        个人技池
+      </button>
+    </div>
+    <div v-if="mode === 'collections'" class="chips">
       <button
         v-for="c in collections"
         :key="c.id"
@@ -100,7 +132,7 @@ function deleteActive() {
       <button class="chip add" type="button" title="新建收藏夹" @click="startCreate">＋</button>
     </div>
 
-    <div v-if="creating" class="edit-row">
+    <div v-if="mode === 'collections' && creating" class="edit-row">
       <input
         v-model="newName"
         class="input"
@@ -113,7 +145,7 @@ function deleteActive() {
       <button class="mini ghost" type="button" @click="creating = false">取消</button>
     </div>
 
-    <template v-if="active">
+    <template v-if="mode === 'collections' && active">
       <div class="head">
         <template v-if="!editingName">
           <h3 class="name">{{ active.name }}</h3>
@@ -185,9 +217,50 @@ function deleteActive() {
       </p>
     </template>
 
-    <p class="hint">
+    <p v-if="mode === 'collections'" class="hint">
       点状态徽章循环切换：未掌握 → 已习得 → 已上手，边框颜色会跟着变。数据只存在本机，不上传。
     </p>
+
+    <template v-else>
+      <p
+        v-if="!poolGroups.proficient.length && !poolGroups.learned.length"
+        class="empty"
+      >
+        技池还是空的 —— 在收藏夹里把技标成「已习得」或「已上手」，它就会出现在这里。
+      </p>
+
+      <template v-else>
+        <section v-if="poolGroups.proficient.length" class="group">
+          <div class="ghead">
+            <span class="lbl gold">已上手</span>
+            <span class="gn">{{ poolGroups.proficient.length }}</span>
+          </div>
+          <ul class="pool-list">
+            <li v-for="x in poolGroups.proficient" :key="x.wazaId" class="pool-item gold">
+              <span class="pja">{{ x.waza.nameJa }}</span>
+              <span class="pzh">{{ x.waza.nameZh || x.waza.series || '' }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="poolGroups.learned.length" class="group">
+          <div class="ghead">
+            <span class="lbl blue">已习得</span>
+            <span class="gn">{{ poolGroups.learned.length }}</span>
+          </div>
+          <ul class="pool-list">
+            <li v-for="x in poolGroups.learned" :key="x.wazaId" class="pool-item blue">
+              <span class="pja">{{ x.waza.nameJa }}</span>
+              <span class="pzh">{{ x.waza.nameZh || x.waza.series || '' }}</span>
+            </li>
+          </ul>
+        </section>
+      </template>
+
+      <p class="hint">
+        个人技池由所有收藏夹汇总而成，只读。同一技在多个收藏夹里有不同状态时，按最高状态显示。
+      </p>
+    </template>
   </CollapsibleCard>
 </template>
 
@@ -423,6 +496,107 @@ function deleteActive() {
   line-height: 1.7;
   color: #5f728c;
   padding: 10px 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #0f1729;
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.tab {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: #7f9ac0;
+  font-size: 13px;
+  padding: 9px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.tab.on {
+  background: #2f6fd0;
+  color: #fff;
+  font-weight: 600;
+}
+
+.group {
+  margin-bottom: 14px;
+}
+
+.ghead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.ghead .lbl {
+  font-weight: 600;
+}
+
+.lbl.gold {
+  color: #ffd98a;
+}
+
+.lbl.blue {
+  color: #a8d0ff;
+}
+
+.gn {
+  color: #5f728c;
+  font-variant-numeric: tabular-nums;
+}
+
+.pool-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pool-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  margin-bottom: 7px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  background: #0f1729;
+}
+
+.pool-item.gold {
+  border-color: #f5a524;
+}
+
+.pool-item.blue {
+  border-color: #4a8fe0;
+}
+
+.pja {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e6edf7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pzh {
+  flex: none;
+  font-size: 11px;
+  color: #6b7f9c;
 }
 
 .hint {
