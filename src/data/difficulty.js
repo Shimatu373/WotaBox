@@ -61,6 +61,12 @@ export const DIFFICULTY = {
   サンダースネイク: 'basic', // 雷蛇
   アマテラス: 'basic', // 天照
   ムラマサ: 'basic', // 村正
+
+  // 中文WOTA艺wiki 未收录、由星沫确认存在的四条（见 waza.js ROWS 末尾）
+  翠银婢: 'master',
+  城天丸: 'expert',
+  杰克小刀: 'advanced',
+  '无名刀·木偶': 'advanced',
 }
 
 export default DIFFICULTY

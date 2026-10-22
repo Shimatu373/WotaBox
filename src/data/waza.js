@@ -278,6 +278,13 @@ const ROWS = [
   ['Boxing', '拳击'],
   ['Christian Cross', '基督十字'],
   ['エクスプロード', 'Explode'],
+
+  // ===== 中文WOTA艺wiki 尚未收录，但星沫确认存在的技（2026-10-22）=====
+  // 名字就是这几个写法，wiki 上没有对应词条，所以 wiki 链接置空（wiki: null）
+  ['翠银婢', null, null, null, { wiki: null }],
+  ['城天丸', null, null, null, { wiki: null }],
+  ['杰克小刀', null, null, null, { wiki: null }],
+  ['无名刀·木偶', null, null, null, { wiki: null }],
 ]
 
 /** 稳定 id：同一日文名永远得到同一个 id，收藏夹数据不会因为排序变化而失效 */
@@ -320,7 +327,8 @@ export const WAZA = ALL_ROWS.map(([nameJa, nameZh, series, type, extra = {}]) =>
     tags: extra.tags || [],
     videos: extra.videos || [],
     // 与 wiki 词条标题约定一致：日文名〈中文译名〉
-    wiki: extra.wiki || (nameZh ? `${nameJa}〈${nameZh}〉` : nameJa),
+    // 显式写 wiki: null 表示「wiki 上确实没有这个词条」，界面上不显示跳转链接（避免死链）
+    wiki: extra.wiki === null ? null : extra.wiki || (nameZh ? `${nameJa}〈${nameZh}〉` : nameJa),
     pitfalls: extra.pitfalls || '',
     // 难度：waza.js 里手写 > difficulty.js 的核定表 > 待评定（null）
     difficulty: extra.difficulty ?? DIFFICULTY[nameJa] ?? null,
