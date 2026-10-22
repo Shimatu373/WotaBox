@@ -10,7 +10,8 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { WAZA, wikiUrl } from '../src/data/waza.js'
+import { WAZA, wikiUrl, TYPE_DEF } from '../src/data/waza.js'
+import { DIFFICULTY_DEF } from '../src/data/difficulty.js'
 import { loadAllMeta } from './lib-wiki-meta.mjs'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -28,11 +29,25 @@ const esc = (s) => {
 }
 
 const lines = []
-lines.push('日文名,中文译名,wiki系列名,作成者,建议系列（请填写）,wiki链接')
+lines.push(
+  '日文名,中文译名,wiki系列名,作成者,建议系列（请填写）,难度（请填写：基础/进阶/专家/大师）,技类型（请填写：关西/火把/综合）,wiki链接',
+)
 for (const w of rows) {
   const meta = META[w.nameJa] || {}
   lines.push(
-    [w.nameJa, w.nameZh || '', meta.seriesJa || '', meta.creator || '', '', wikiUrl(w.wiki)].map(esc).join(','),
+    [
+      w.nameJa,
+      w.nameZh || '',
+      meta.seriesJa || '',
+      meta.creator || '',
+      '', // 建议系列：留给社团填
+      // 已有档位就带上，省得重复评；没有就是空的
+      w.difficulty ? DIFFICULTY_DEF[w.difficulty]?.label || w.difficulty : '',
+      w.type ? TYPE_DEF[w.type]?.label || w.type : '',
+      wikiUrl(w.wiki),
+    ]
+      .map(esc)
+      .join(','),
   )
 }
 
