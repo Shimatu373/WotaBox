@@ -4,14 +4,17 @@ import PlayerPanel from './components/PlayerPanel.vue'
 import ChoreoPanel from './components/ChoreoPanel.vue'
 import BpmPanel from './components/BpmPanel.vue'
 import WazaPanel from './components/WazaPanel.vue'
+import VideoComparePanel from './components/VideoComparePanel.vue'
 import FavoritesPanel from './components/FavoritesPanel.vue'
 import BackupPanel from './components/BackupPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 
+/** 版本号由 vite.config.js 从 package.json 注入（__APP_VERSION__） */
+const appVersion = __APP_VERSION__
+
 const upcoming = [
   { icon: '🗺️', name: '全国光棒地图', desc: '收录各地界隈与活动场地，找同好、走圣地巡礼' },
-  { icon: '🎬', name: '视频对比器', desc: '本地视频慢放 / 镜像 / 逐帧，纠正动作细节' },
   { icon: '💡', name: '你知道吗', desc: '光棒小知识合集' },
 ]
 </script>
@@ -35,11 +38,13 @@ const upcoming = [
 
     <WazaPanel />
 
+    <VideoComparePanel />
+
     <FavoritesPanel />
 
     <BackupPanel />
 
-    <CollapsibleCard id="upcoming" title="接下来" summary="3 项" :default-open="false">
+    <CollapsibleCard id="upcoming" title="接下来" :summary="`${upcoming.length} 项`" :default-open="false">
       <ul class="feat">
         <li v-for="f in upcoming" :key="f.name">
           <span class="ico">{{ f.icon }}</span>
@@ -52,7 +57,7 @@ const upcoming = [
       </ul>
     </CollapsibleCard>
 
-    <footer>v0.7.0 · WotaBox</footer>
+    <footer>v{{ appVersion }} · WotaBox</footer>
   </div>
 </template>
 
