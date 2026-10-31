@@ -5,8 +5,11 @@
  * 为什么只吃本地文件：平台视频（B站/YouTube）是跨域 iframe，拿不到解码后的帧，
  * 也没法把播放位置精确到某一帧。要做到「逐帧看动作」只能用自己的 <video> 播本地文件。
  *
- * 同步思路：A 是主时钟，B 跟随 A（可加帧偏移）。播放时每帧检查两者偏差，
- * 超过阈值就把 B 拉回去；逐帧/拖时间轴时两个一起 seek，所以永远保持同一时刻。
+ * 时间轴怎么设计的：
+ *   - 每个视频有**自己的位置**（pos.A / pos.B），互不干扰
+ *   - 顶部那条「联动时间轴」拖动时，两边**同时平移相同的量**，对齐关系不变
+ *   - 要错开两个视频（两段录影起点不同），打开「分别微调」，各拖各的滑条
+ *   - 分别微调的滑条平时收起，播放时自动隐藏（那时用不上）
  */
 import { computed, onBeforeUnmount, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
@@ -19,36 +22,35 @@ const B = ref(makeSlot('B'))
 
 const rate = ref(1)
 const playing = ref(false)
-const position = ref(0) // 当前时间（秒，以 A 为准）
+const showTrim = ref(false) // 「分别微调」是否展开
 const measuring = ref(false)
+/** 两个视频各自的位置（秒） */
+const pos = ref({ A: 0, B: 0 })
 
 function makeSlot(label) {
   return {
     label,
     name: '',
     url: '',
-    fps: 30, // 探测出来后会被覆盖
+    fps: 30,
     fpsDetected: false,
     mirrorX: false,
     mirrorY: false,
     duration: 0,
-    offsetFrames: 0, // 仅 B 用：B 相对 A 的帧偏移
   }
 }
 
 /** 两个 <video> 的 DOM 引用（普通对象即可，不需要响应式） */
 const elStore = { A: null, B: null }
-
 const rafId = ref(0)
 /** 帧时间采样（用于自动探测帧率） */
 const samples = { A: [], B: [] }
 
-const duration = computed(() => Math.max(A.value.duration || 0, B.value.duration || 0))
-const hasAny = computed(() => Boolean(A.value.url || B.value.url))
-const offsetSeconds = computed(() => {
-  const fps = B.value.fps || 30
-  return (B.value.offsetFrames || 0) / fps
-})
+const dur = computed(() => Math.max(A.value.duration || 0, B.value.duration || 0))
+const bothLoaded = computed(() => Boolean(A.value.url && B.value.url))
+/** B 比 A 晚多少（秒）。正数＝B 落后 A */
+const diffSeconds = computed(() => pos.value.B - pos.value.A)
+const diffFrames = computed(() => Math.round(diffSeconds.value * (A.value.fps || 30)))
 
 const summary = computed(() => {
   const n = [A.value, B.value].filter((s) => s.url).length
@@ -68,6 +70,10 @@ function elOf(slot) {
   return elStore[slot] || null
 }
 
+function slotRef(slot) {
+  return slot === 'A' ? A : B
+}
+
 /** 常见的 29.97 / 59.94 归到 30 / 60，避免帧步进出现 0.0333 这种怪数 */
 function snapFps(raw) {
   if (!Number.isFinite(raw) || raw <= 1 || raw > 240) return null
@@ -79,7 +85,7 @@ function snapFps(raw) {
 function startFpsProbe(slot) {
   const el = elOf(slot)
   if (!el || typeof el.requestVideoFrameCallback !== 'function') return
-  const obj = slot === 'A' ? A : B
+  const obj = slotRef(slot)
 
   const tick = (_, meta) => {
     if (!el.isConnected) return
@@ -88,10 +94,10 @@ function startFpsProbe(slot) {
     if (prev !== undefined) {
       const d = meta.mediaTime - prev
       if (d > 0.0005 && d < 0.2) {
-        samples[slot].push(meta.mediaTime)
-        if (samples[slot].length > 24) samples[slot].shift()
+        arr.push(meta.mediaTime)
+        if (arr.length > 24) arr.shift()
         const gaps = []
-        for (let i = 1; i < samples[slot].length; i++) gaps.push(samples[slot][i] - samples[slot][i - 1])
+        for (let i = 1; i < arr.length; i++) gaps.push(arr[i] - arr[i - 1])
         gaps.sort((x, y) => x - y)
         const median = gaps[Math.floor(gaps.length / 2)]
         const fps = snapFps(median ? 1 / median : null)
@@ -105,76 +111,79 @@ function startFpsProbe(slot) {
     } else {
       samples[slot] = [meta.mediaTime]
     }
-    // 采样够多就停，继续播时不必一直算
-    if (samples[slot].length < 20 && !el.paused) el.requestVideoFrameCallback(tick)
+    if (arr.length < 20 && !el.paused) el.requestVideoFrameCallback(tick)
   }
   el.requestVideoFrameCallback(tick)
 }
 
-async function pickFile(slot, e) {
+function pickFile(slot, e) {
   const file = e.target.files && e.target.files[0]
   if (!file) return
-  const obj = slot === 'A' ? A : B
+  const obj = slotRef(slot)
   if (obj.value.url) URL.revokeObjectURL(obj.value.url)
   samples[slot] = []
-  obj.value = {
-    ...makeSlot(slot),
-    name: file.name,
-    url: URL.createObjectURL(file),
-  }
-  // 换片后等元数据就位再对齐
+  obj.value = { ...makeSlot(slot), name: file.name, url: URL.createObjectURL(file) }
+  pos.value = { ...pos.value, [slot]: 0 }
   e.target.value = ''
 }
 
 function onLoaded(slot) {
   const el = elOf(slot)
   if (!el) return
-  const obj = slot === 'A' ? A : B
-  obj.value.duration = el.duration || 0
+  slotRef(slot).value.duration = el.duration || 0
   el.playbackRate = rate.value
   startFpsProbe(slot)
-  if (!playing.value) seekAll(position.value, { force: true })
+  seek(slot, pos.value[slot], { force: true })
 }
 
-/** 把两个视频同时定位到 t（A 的时刻）；B 减去偏移 */
-async function seekAll(t, { force = false } = {}) {
-  const a = elStore.A
-  const b = elStore.B
-  const clamped = Math.max(0, Math.min(t, duration.value || t))
-  position.value = clamped
-  if (a) {
-    const ta = Math.min(clamped, a.duration || clamped)
-    if (force || Math.abs(a.currentTime - ta) > 0.005) a.currentTime = ta
-  }
-  if (b) {
-    const tb = Math.min(Math.max(clamped - offsetSeconds.value, 0), b.duration || clamped)
-    if (force || Math.abs(b.currentTime - tb) > 0.005) b.currentTime = tb
+/** 单独定位某一个视频 */
+function seek(slot, t, { force = false } = {}) {
+  const el = elOf(slot)
+  const d = slotRef(slot).value.duration || Infinity
+  const clamped = Math.max(0, Math.min(t, d))
+  pos.value = { ...pos.value, [slot]: clamped }
+  if (el && (force || Math.abs(el.currentTime - clamped) > 0.004)) el.currentTime = clamped
+}
+
+/** 两边同时平移 delta 秒（联动轴拖动 / 逐帧都走这里，对齐关系保持不变） */
+function seekBoth(delta, { force = false } = {}) {
+  for (const slot of ['A', 'B']) {
+    if (elOf(slot)) seek(slot, pos.value[slot] + delta, { force })
   }
 }
 
-/** 播放中每帧对齐：偏差超过阈值就把 B 拉回 A 的时间点 */
+/* ---------------- 播放与同步 ---------------- */
+
+/** 播放起点，用于判断两边「各自走了多远」，而不是比较绝对位置 */
+let start = { A: 0, B: 0 }
+
 function tickSync() {
   const a = elStore.A
   const b = elStore.B
-  // 主时钟优先用 A；只有 B 时用 B - 偏移
-  if (a && !a.paused) position.value = a.currentTime
-  else if (!a && b && !b.paused) position.value = Math.max(b.currentTime + offsetSeconds.value, 0)
-  if (a && b && !b.paused) {
-    const want = a.currentTime - offsetSeconds.value
-    const toler = 0.04 + rate.value * 0.03
-    if (want >= 0 && Math.abs(b.currentTime - want) > toler) b.currentTime = want
+  if (a && !a.paused) pos.value = { ...pos.value, A: a.currentTime }
+  if (b && !b.paused) pos.value = { ...pos.value, B: b.currentTime }
+
+  // 同步：比较「从起点各走了多少」，谁走得快就把另一个拉到同等进度，
+  // 这样即使两段视频本来错开几秒也对得上
+  if (a && b && !a.paused && !b.paused) {
+    const advA = a.currentTime - start.A
+    const advB = b.currentTime - start.B
+    const toler = 0.05 + rate.value * 0.04
+    if (advA - advB > toler) b.currentTime = start.B + advA
+    else if (advB - advA > toler) a.currentTime = start.A + advB
   }
   if (playing.value) rafId.value = requestAnimationFrame(tickSync)
 }
 
-async function play() {
+function play() {
   const a = elStore.A
   const b = elStore.B
   if (!a && !b) return
-  await seekAll(position.value, { force: true })
+  start = { A: a ? a.currentTime : 0, B: b ? b.currentTime : 0 }
   if (a) a.playbackRate = rate.value
   if (b) b.playbackRate = rate.value
   playing.value = true
+  showTrim.value = false // 播放时收起分别微调（那时用不上）
   if (a) a.play().catch(() => {})
   if (b) b.play().catch(() => {})
   cancelAnimationFrame(rafId.value)
@@ -182,8 +191,9 @@ async function play() {
 }
 
 function pause() {
-  // 停之前先把 A 的真实位置记下来，否则逐帧会从上一帧的位置起步
-  if (elStore.A && !elStore.A.paused) position.value = elStore.A.currentTime
+  // 停之前先把真实位置记下来，否则逐帧会从旧位置起步
+  if (elStore.A && !elStore.A.paused) pos.value = { ...pos.value, A: elStore.A.currentTime }
+  if (elStore.B && !elStore.B.paused) pos.value = { ...pos.value, B: elStore.B.currentTime }
   playing.value = false
   cancelAnimationFrame(rafId.value)
   elStore.A?.pause()
@@ -195,12 +205,10 @@ function togglePlay() {
   else play()
 }
 
-/** 逐帧：先暂停，再按 1/fps 步进；两个视频保持同步 */
-async function step(frames) {
+/** 逐帧：先暂停，再两边各走 1/fps */
+function step(frames) {
   pause()
-  const fps = A.value.fps || 30
-  const t = position.value + frames / fps
-  await seekAll(t, { force: true })
+  seekBoth(frames / (A.value.fps || 30), { force: true })
 }
 
 function setRate(v) {
@@ -209,14 +217,30 @@ function setRate(v) {
   if (elStore.B) elStore.B.playbackRate = v
 }
 
-function nudgeOffset(frames) {
-  B.value.offsetFrames = (B.value.offsetFrames || 0) + frames
-  seekAll(position.value, { force: true })
+/* ---------------- 时间轴 ---------------- */
+
+/** 联动轴（以 A 的位置为准，拖动时两边同量平移） */
+function onLinkedTime(e) {
+  pause()
+  const target = Number(e.target.value)
+  seekBoth(target - pos.value.A, { force: true })
 }
 
-function resetOffset() {
-  B.value.offsetFrames = 0
-  seekAll(position.value, { force: true })
+/** 单视频滑条 */
+function onTrimTime(slot, e) {
+  pause()
+  seek(slot, Number(e.target.value), { force: true })
+}
+
+function resetAlign() {
+  pause()
+  seek('B', pos.value.A, { force: true })
+}
+
+function setFps(slot, value) {
+  const obj = slotRef(slot)
+  obj.value.fps = Number(value) || 30
+  obj.value.fpsDetected = false
 }
 
 /** 自动测量帧率：短暂播一下取帧间隔中位数，测完两个视频都停回原位 */
@@ -226,7 +250,7 @@ function measureFps(slot) {
   if (typeof el.requestVideoFrameCallback !== 'function') return
   measuring.value = true
   samples[slot] = []
-  const resumeAt = position.value
+  const resume = { ...pos.value }
   const restore = () => {
     el.pause()
     elStore.A?.pause()
@@ -234,7 +258,8 @@ function measureFps(slot) {
     playing.value = false
     cancelAnimationFrame(rafId.value)
     measuring.value = false
-    seekAll(resumeAt, { force: true })
+    seek('A', resume.A, { force: true })
+    seek('B', resume.B, { force: true })
   }
   startFpsProbe(slot)
   el.play()
@@ -244,15 +269,10 @@ function measureFps(slot) {
     })
 }
 
-function setFps(slot, value) {
-  const obj = slot === 'A' ? A : B
-  obj.value.fps = Number(value) || 30
-  obj.value.fpsDetected = false
-}
-
-function onTimeline(e) {
-  pause()
-  seekAll(Number(e.target.value), { force: true })
+function toggleMirror(slot, axis) {
+  const obj = slotRef(slot)
+  const key = axis === 'x' ? 'mirrorX' : 'mirrorY'
+  obj.value[key] = !obj.value[key]
 }
 
 onBeforeUnmount(() => {
@@ -301,7 +321,7 @@ onBeforeUnmount(() => {
             type="button"
             :class="{ on: (slot === 'A' ? A : B).mirrorX }"
             title="左右镜像"
-            @click="(slot === 'A' ? A : B).mirrorX = !(slot === 'A' ? A : B).mirrorX"
+            @click="toggleMirror(slot, 'x')"
           >
             ↔ 镜像
           </button>
@@ -310,20 +330,23 @@ onBeforeUnmount(() => {
             type="button"
             :class="{ on: (slot === 'A' ? A : B).mirrorY }"
             title="上下翻转"
-            @click="(slot === 'A' ? A : B).mirrorY = !(slot === 'A' ? A : B).mirrorY"
+            @click="toggleMirror(slot, 'y')"
           >
             ↕ 翻转
           </button>
         </div>
 
         <div class="slot-meta">
-          <span>帧率 {{ (slot === 'A' ? A : B).fps }}{{ (slot === 'A' ? A : B).fpsDetected ? '（已校准）' : '（估算）' }}</span>
+          <span class="t">{{ fmt(pos[slot], (slot === 'A' ? A : B).fps) }}</span>
+          <span class="fps"
+            >{{ (slot === 'A' ? A : B).fps }}fps{{ (slot === 'A' ? A : B).fpsDetected ? '' : '?' }}</span
+          >
           <select class="fps-pick" @change="setFps(slot, $event.target.value)">
             <option value="">改帧率</option>
-            <option v-for="f in FPS_PRESETS" :key="f" :value="f">{{ f }} fps</option>
+            <option v-for="f in FPS_PRESETS" :key="f" :value="f">{{ f }}</option>
           </select>
           <button class="mini" type="button" @click="measureFps(slot)">
-            {{ measuring ? '测量中…' : '自动测量' }}
+            {{ measuring ? '测量中…' : '测帧率' }}
           </button>
         </div>
       </section>
@@ -344,34 +367,60 @@ onBeforeUnmount(() => {
       </label>
     </div>
 
+    <!-- 联动时间轴：拖动时两段同量平移，对齐关系不变 -->
     <div class="timeline">
+      <div class="tl-label">
+        <span>联动时间轴</span>
+        <span class="tl-hint">拖动时两段同量平移；要错开用下面的「分别微调」</span>
+      </div>
       <input
         type="range"
         :min="0"
-        :max="duration || 1"
+        :max="dur || 1"
         :step="1 / (A.fps || 30)"
-        :value="position"
-        @input="onTimeline"
+        :value="pos.A"
+        @input="onLinkedTime"
       />
       <div class="time-row">
-        <span class="t">{{ fmt(position, A.fps) }}</span>
-        <span class="t total">/ {{ fmt(duration, A.fps) }}</span>
+        <span class="t">{{ fmt(pos.A, A.fps) }}</span>
+        <span class="total">/ {{ fmt(dur, A.fps) }}</span>
+        <span v-if="bothLoaded" class="diff" :class="{ warn: Math.abs(diffFrames) > 0 }">
+          B 比 A {{ diffSeconds >= 0 ? '慢' : '快' }} {{ Math.abs(diffFrames) }} 帧
+        </span>
         <span class="sync-tag">{{ playing ? '同步播放中' : '已暂停' }}</span>
       </div>
     </div>
 
-    <div class="offset">
-      <span class="olabel">B 相对 A 的偏移</span>
-      <button class="mini" type="button" @click="nudgeOffset(-1)">−1 帧</button>
-      <span class="oval">{{ B.offsetFrames > 0 ? '+' : '' }}{{ B.offsetFrames }} 帧</span>
-      <button class="mini" type="button" @click="nudgeOffset(1)">+1 帧</button>
-      <button class="mini" type="button" @click="resetOffset">归零</button>
-      <span class="ohint">{{ offsetSeconds ? `${offsetSeconds.toFixed(3)} 秒` : '完全对齐' }}</span>
+    <!-- 分别微调：默认收起，播放时自动隐藏 -->
+    <div class="trim">
+      <button class="btn ghost" type="button" @click="showTrim = !showTrim">
+        {{ showTrim ? '收起分别微调' : '分别微调（各自的时间轴）' }}
+      </button>
+      <button v-if="showTrim && bothLoaded" class="btn ghost" type="button" @click="resetAlign">
+        B 对齐到 A
+      </button>
+    </div>
+
+    <div v-if="showTrim && !playing" class="trim-body">
+      <div v-for="slot in ['A', 'B']" :key="slot" class="trim-row">
+        <span class="trim-name">{{ slot }}</span>
+        <input
+          type="range"
+          :min="0"
+          :max="(slot === 'A' ? A : B).duration || 1"
+          :step="1 / ((slot === 'A' ? A : B).fps || 30)"
+          :value="pos[slot]"
+          @input="onTrimTime(slot, $event)"
+        />
+        <span class="trim-time">{{ fmt(pos[slot], (slot === 'A' ? A : B).fps) }}</span>
+      </div>
+      <p class="trim-hint">
+        两条滑条互不影响 —— 把两段录影的同一个动作对齐后，回到上面的联动轴播放，就始终是同一时刻。
+      </p>
     </div>
 
     <p class="hint">
-      两个视频共用一条时间轴：播放、拖拽、逐帧都会把两边一起定位。对不齐时用「B 相对 A 的偏移」按帧微调，
-      适合比较同一动作的不同版本（原版 / 改版 / 自己的练习）。
+      逐帧 / 拖拽 / 播放都会让两个视频保持同步；对齐靠「分别微调」里各自的滑条，不用再一帧一帧地挪。
     </p>
   </CollapsibleCard>
 </template>
@@ -514,6 +563,12 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
+.slot-meta .t {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #cfe3ff;
+  font-size: 11px;
+}
+
 .fps-pick,
 .rate select {
   font-size: 11px;
@@ -552,6 +607,12 @@ onBeforeUnmount(() => {
   min-width: 110px;
 }
 
+.btn.ghost {
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #7f9ac0;
+}
+
 .rate {
   margin-left: auto;
   display: inline-flex;
@@ -565,6 +626,19 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
 }
 
+.tl-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 10px;
+  color: #7f9ac0;
+  margin-bottom: 2px;
+}
+
+.tl-hint {
+  color: #4d5a70;
+}
+
 .timeline input[type='range'] {
   width: 100%;
   accent-color: #2f6fd0;
@@ -576,6 +650,7 @@ onBeforeUnmount(() => {
   gap: 6px;
   font-size: 11px;
   color: #7f9ac0;
+  flex-wrap: wrap;
 }
 
 .t {
@@ -587,39 +662,68 @@ onBeforeUnmount(() => {
   color: #5f728c;
 }
 
+.diff {
+  font-size: 10px;
+  color: #5f728c;
+}
+
+.diff.warn {
+  color: #e6c07a;
+}
+
 .sync-tag {
   margin-left: auto;
   font-size: 10px;
   color: #5f728c;
 }
 
-.offset {
+.trim {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
-  font-size: 11px;
-  color: #7f9ac0;
+  margin-bottom: 8px;
+}
+
+.trim-body {
   background: #0f1729;
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 10px;
   margin-bottom: 10px;
 }
 
-.olabel {
-  color: #8fa3bf;
+.trim-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-.oval {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+.trim-name {
+  font-size: 11px;
+  font-weight: 700;
   color: #cfe3ff;
-  min-width: 46px;
-  text-align: center;
+  width: 14px;
+  flex: none;
 }
 
-.ohint {
+.trim-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #2f6fd0;
+}
+
+.trim-time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: #9db6d6;
+  flex: none;
+}
+
+.trim-hint {
+  margin: 4px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
   color: #5f728c;
-  margin-left: auto;
 }
 
 .hint {
