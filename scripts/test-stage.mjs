@@ -24,7 +24,9 @@ import {
   setKeyDuration,
   retimeKey,
   seedKey,
+  removeClipSegments,
   segmentsInRange,
+  segmentsOfClip,
   setPos,
   toggleHard,
 } from '../src/composables/stageModel.js'
@@ -324,6 +326,43 @@ ok('不是选中的打师 → 不可拖', canDragDancer({ selectedKey: 'd1', dan
 ok('不在场（alpha 0）→ 不可拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd1', recordMode: true, alpha: 0 }) === false)
 ok('刚淡入一点点也能拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd1', recordMode: true, alpha: 0.2 }))
 ok('没传 dancerKey → 不可拖', canDragDancer({ selectedKey: null, dancerKey: null, recordMode: true, alpha: 1 }) === false)
+
+/* ---------- 回归：片段时间相邻/重叠时，动作不能串到别的片段 ---------- */
+
+// 两个片段的起点只差 0.4 秒（老实现用「±0.5 秒」判断已有段，会把前一个覆盖掉）
+const stC = fresh()
+addDancer(stC, 'A')
+const clip3 = { id: 'c3', name: '第三段', a: 30, b: 40, steps: [{ kind: 'text', text: '第三段动作' }] }
+const clip4 = { id: 'c4', name: '第四段', a: 30.4, b: 50, steps: [{ kind: 'text', text: '第四段动作' }] }
+importClipSteps(stC, 'd1', clip3)
+importClipSteps(stC, 'd1', clip4)
+
+eq('两段各存一条', stC.lines.d1.length, 2)
+eq('第三段还是自己的动作', segmentsOfClip(stC, 'd1', clip3)[0].steps, [{ kind: 'text', text: '第三段动作' }])
+eq('第四段是自己的动作', segmentsOfClip(stC, 'd1', clip4)[0].steps, [{ kind: 'text', text: '第四段动作' }])
+
+// 区间重叠：第三段 [30,40)，第四段可能从 35 开始
+const clip5 = { id: 'c5', name: '第五段', a: 35, b: 45, steps: [{ kind: 'text', text: '第五段动作' }] }
+importClipSteps(stC, 'd1', clip5)
+eq('重叠区间不串到第三段', segmentsOfClip(stC, 'd1', clip3).length, 1)
+eq('重叠区间里第五段只有自己的', segmentsOfClip(stC, 'd1', clip5).map((s) => s.steps[0].text), ['第五段动作'])
+
+// 清空只删自己那段
+removeClipSegments(stC, 'd1', clip5)
+eq('清空第五段后第五段为空', segmentsOfClip(stC, 'd1', clip5).length, 0)
+eq('第三、四段没被牵连', [segmentsOfClip(stC, 'd1', clip3).length, segmentsOfClip(stC, 'd1', clip4).length], [1, 1])
+
+// 重复导入同一片段：覆盖而不是新增
+importClipSteps(stC, 'd1', { ...clip4, steps: [{ kind: 'text', text: '改过的四段' }] })
+eq('重复导入覆盖', stC.lines.d1.filter((s) => s.clipId === 'c4').length, 1)
+eq('内容已更新', segmentsOfClip(stC, 'd1', clip4)[0].steps, [{ kind: 'text', text: '改过的四段' }])
+
+// 老数据（没有 clipId）按区间兜底显示
+const stL = fresh()
+addDancer(stL, 'A')
+stL.lines.d1 = [{ at: 30, steps: [{ kind: 'text', text: '老数据' }] }]
+eq('无 clipId 时退回区间判断', segmentsOfClip(stL, 'd1', clip3).length, 1)
+eq('无 clipId 时不落到区间外的片段', segmentsOfClip(stL, 'd1', clip4).length, 0)
 
 /* ---------- 结果 ---------- */
 

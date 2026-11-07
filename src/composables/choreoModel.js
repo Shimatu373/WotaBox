@@ -154,8 +154,50 @@ export function normalizeState(raw) {
     for (const [dk, list] of Object.entries(value?.lines || {})) {
       if (!Array.isArray(list)) continue
       s.lines[dk] = list
-        .map((seg) => ({ at: Math.max(0, num(seg?.at)), steps: normalizeSteps(seg?.steps) }))
+        .map((seg) => {
+          const out = { at: Math.max(0, num(seg?.at)), steps: normalizeSteps(seg?.steps) }
+          // 动作段归属哪个片段：用 id，别用时间（片段区间可以相邻/重叠）
+          if (seg?.clipId) out.clipId = String(seg.clipId)
+          return out
+        })
         .sort((a, b) => a.at - b.at)
+    }
+  }
+  backfillClipIds(state)
+  return state
+}
+
+/**
+ * 给没有 clipId 的动作段补上归属。
+ * 老数据（v2 早期）只记了时间，靠「起点 ±0.5 秒」找对应片段；
+ * 找不到的保持无归属，界面上会退回按区间显示。
+ */
+export function backfillClipIds(state) {
+  const bySong = new Map()
+  for (const c of state.clips) {
+    if (!bySong.has(c.songKey)) bySong.set(c.songKey, [])
+    bySong.get(c.songKey).push(c)
+  }
+  for (const [songKey, clips] of bySong) {
+    const sorted = [...clips].sort((a, b) => a.a - b.a)
+    const lines = state.songs?.[songKey]?.lines
+    if (!lines) continue
+    for (const list of Object.values(lines)) {
+      if (!Array.isArray(list)) continue
+      for (const seg of list) {
+        if (seg.clipId) continue
+        // 取「起点离它最近」的片段（两个片段起点都可能落在 ±0.5 秒内）
+        let best = null
+        let bestGap = Infinity
+        for (const c of sorted) {
+          const gap = Math.abs(c.a - seg.at)
+          if (gap <= 0.5 && gap < bestGap) {
+            best = c
+            bestGap = gap
+          }
+        }
+        if (best) seg.clipId = best.id
+      }
     }
   }
   return state

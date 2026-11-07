@@ -307,17 +307,54 @@ export function segmentsInRange(stage, dancerKey, a, b) {
   return segmentsOf(stage, dancerKey).filter((s) => s.at >= a - 1e-6 && s.at < b - 1e-6)
 }
 
-/** 把某个片段的动作复制给这个打师（同一时间点已有就覆盖） */
+/**
+ * 把某个片段的动作复制给这个打师。
+ *
+ * 归属用 **clipId** 而不是时间：片段的时间区间可以相邻甚至重叠，
+ * 按区间/时间近似判断会让「导入第 4 段」把第 3 段的动作覆盖或串过去。
+ * 老数据没有 clipId 的，用「同一片段起点 ±0.5 秒」兜底兼容一次。
+ */
 export function importClipSteps(stage, dancerKey, clip) {
   if (!Array.isArray(stage.lines[dancerKey])) stage.lines[dancerKey] = []
   const list = stage.lines[dancerKey]
-  const existing = list.find((s) => Math.abs(s.at - clip.a) <= 0.5)
   const steps = normalizeSteps(clip.steps).map((s) => ({ ...s }))
-  if (existing) existing.steps = steps
-  else list.push({ at: clip.a, steps })
+  let seg = list.find((s) => s.clipId === clip.id)
+  if (!seg) seg = list.find((s) => !s.clipId && Math.abs(s.at - clip.a) <= 0.5)
+  if (seg) {
+    seg.steps = steps
+    seg.at = clip.a
+    seg.clipId = clip.id
+  } else {
+    list.push({ at: clip.a, clipId: clip.id, steps })
+  }
   list.sort((x, y) => x.at - y.at)
   return list
 }
+
+/** 这个打师在某个片段上的动作段（按 clipId 归属，老数据退回区间判断） */
+export function segmentsOfClip(stage, dancerKey, clip) {
+  return segmentsOf(stage, dancerKey).filter((s) =>
+    s.clipId ? s.clipId === clip.id : s.at >= clip.a - 1e-6 && s.at < clip.b - 1e-6,
+  )
+}
+
+/** 清空某打师在某片段上的动作（只删归属这个片段的段） */
+export function removeClipSegments(stage, dancerKey, clip) {
+  const list = stage.lines?.[dancerKey]
+  if (!Array.isArray(list)) return 0
+  let removed = 0
+  for (let i = list.length - 1; i >= 0; i--) {
+    const s = list[i]
+    const own = s.clipId ? s.clipId === clip.id : s.at >= clip.a - 1e-6 && s.at < clip.b - 1e-6
+    if (own) {
+      list.splice(i, 1)
+      removed++
+    }
+  }
+  return removed
+}
+
+
 
 export function removeSegment(stage, dancerKey, index) {
   const list = stage.lines?.[dancerKey]

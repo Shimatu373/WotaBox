@@ -11,6 +11,7 @@
  */
 import {
   addClipToState,
+  backfillClipIds,
   buildChoreoPayload,
   mergeChoreoState,
   clipsBySongIn,
@@ -209,6 +210,24 @@ eq('本地已有站位时不覆盖', st2.songsSkipped, 1)
 const target2 = emptyState()
 addClipToState(target2, { song: srcSong, name: '占位', a: 1, b: 2, steps: [] })
 eq('空壳站位可以导入', mergeChoreoState(target2, payload.data).songsImported, 1)
+
+/* ---------- 老数据补 clipId ---------- */
+
+const legacy = normalizeState({
+  clips: [
+    { id: 'c3', songKey: 's.mp3::100', fileName: 's.mp3', duration: 100, name: '第三段', a: 30, b: 40, steps: [] },
+    { id: 'c4', songKey: 's.mp3::100', fileName: 's.mp3', duration: 100, name: '第四段', a: 30.4, b: 50, steps: [] },
+  ],
+  songs: {
+    's.mp3::100': {
+      dancers: [{ key: 'd1', name: 'A', color: '#e0574f' }],
+      keys: [],
+      lines: { d1: [{ at: 30, steps: [{ kind: 'text', text: '三段' }] }, { at: 30.4, steps: [{ kind: 'text', text: '四段' }] }] },
+    },
+  },
+})
+eq('normalizeState 自动补上 clipId', legacy.songs['s.mp3::100'].lines.d1.map((s) => s.clipId), ['c3', 'c4'])
+eq('已带 clipId 的不被改写', backfillClipIds(legacy).songs['s.mp3::100'].lines.d1.length, 2)
 
 /* ---------- 结果 ---------- */
 

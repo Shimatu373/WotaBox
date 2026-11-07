@@ -22,7 +22,6 @@ import {
   pasteSegments,
   removeDancer,
   removeKeyAt,
-  removeSegment,
   renameDancer,
   sampleAt,
   lastPosOf,
@@ -31,8 +30,8 @@ import {
   setEnterDir,
   setKeyDuration,
   seedKey,
-  segmentsInRange,
-  segmentsOf,
+  removeClipSegments,
+  segmentsOfClip,
   setPos,
   toggleHard,
 } from '../composables/stageModel.js'
@@ -318,7 +317,7 @@ const clipRows = computed(() => {
   return clips.value.map((c, i) => ({
     clip: c,
     color: CLIP_COLORS[i % CLIP_COLORS.length],
-    segments: segmentsInRange(stage, d.key, c.a, c.b),
+    segments: segmentsOfClip(stage, d.key, c),
   }))
 })
 
@@ -333,14 +332,7 @@ function importFromClip(clip) {
 function clearInClip(clip) {
   const d = selected.value
   if (!d) return
-  const list = segmentsOf(stage, d.key)
-  for (let i = list.length - 1; i >= 0; i--) {
-    const s = list[i]
-    if (s.at >= clip.a - 1e-6 && s.at < clip.b - 1e-6) {
-      const idx = stage.lines[d.key].indexOf(list[i])
-      if (idx !== -1) removeSegment(stage, d.key, idx)
-    }
-  }
+  removeClipSegments(stage, d.key, clip)
   flash('已清空该片段的动作')
 }
 
@@ -351,10 +343,15 @@ function addTextToClip(clip) {
   if (!text) return
   if (!Array.isArray(stage.lines[d.key])) stage.lines[d.key] = []
   const at = clip.a
-  const seg = stage.lines[d.key].find((s) => Math.abs(s.at - at) <= 0.5)
   const step = textStep(text)
-  if (seg) seg.steps.push(step)
-  else stage.lines[d.key].push({ at, steps: [step] })
+  let seg = stage.lines[d.key].find((s) => s.clipId === clip.id)
+  if (!seg) seg = stage.lines[d.key].find((s) => !s.clipId && Math.abs(s.at - at) <= 0.5)
+  if (seg) {
+    seg.steps.push(step)
+    seg.clipId = clip.id
+  } else {
+    stage.lines[d.key].push({ at, clipId: clip.id, steps: [step] })
+  }
   stage.lines[d.key].sort((x, y) => x.at - y.at)
 }
 
