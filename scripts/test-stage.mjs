@@ -20,6 +20,7 @@ import {
   lastPosOf,
   moveKey,
   setEnterDir,
+  setKeyDuration,
   retimeKey,
   seedKey,
   segmentsInRange,
@@ -279,6 +280,40 @@ const before10 = sampleAt(stE, 9.9)
 ok('硬切：到点前不出现', before10.d1 === undefined || before10.d1.alpha === 0, JSON.stringify(before10))
 const atEnter = sampleAt(stE, 10)
 ok('硬切：到点直接到位', near(atEnter.d1.x, 0.5) && near(atEnter.d1.y, 0.5) && near(atEnter.d1.alpha, 1), JSON.stringify(atEnter))
+
+/* ---------- 上下场时长可调 ---------- */
+
+// 间隔 10 秒，但把过渡时长设成 1 秒：应该只在最后 1 秒淡出，前面一直满不透明
+const stD = fresh()
+addDancer(stD, 'A')
+removeKeyAt(stD, 0)
+setPos(stD, 'd1', 0, 0.5, 0.7)
+setPos(stD, 'd1', 10, 0.5, 0.7)
+clearPos(stD, 'd1', 10) // 10 秒下场
+setKeyDuration(stD, 10, 1)
+
+ok('间隔前段保持在场', near(sampleAt(stD, 5).d1?.alpha ?? -1, 1), JSON.stringify(sampleAt(stD, 5)))
+ok('过渡窗口前半段 alpha≈0.5', near(sampleAt(stD, 9.5).d1?.alpha ?? -1, 0.5, 1e-6), JSON.stringify(sampleAt(stD, 9.5)))
+ok('过渡窗口开始前仍满不透明', near(sampleAt(stD, 8.9).d1?.alpha ?? -1, 1), JSON.stringify(sampleAt(stD, 8.9)))
+
+// 上场同理：1 秒内滑入，之前一直不可见
+const stU = fresh()
+addDancer(stU, 'A')
+removeKeyAt(stU, 0)
+setPos(stU, 'd1', 0, 0.5, 0.5)
+clearPos(stU, 'd1', 0)
+setPos(stU, 'd1', 10, 0.5, 0.5)
+setKeyDuration(stU, 10, 1)
+ok('未到窗口时仍是全透明（不可见）', near(sampleAt(stU, 8).d1?.alpha ?? 0, 0), JSON.stringify(sampleAt(stU, 8)))
+ok('窗口内 alpha≈0.5', near(sampleAt(stU, 9.5).d1?.alpha ?? -1, 0.5, 1e-6), JSON.stringify(sampleAt(stU, 9.5)))
+
+// 时长清空 = 回到整段间隔
+setKeyDuration(stU, 10, null)
+ok('清空时长后回到整段插值', near(sampleAt(stU, 5).d1?.alpha ?? -1, 0.5, 1e-6), JSON.stringify(sampleAt(stU, 5)))
+
+// 时长超过间隔时按整段算（不会更慢）
+setKeyDuration(stU, 10, 30)
+ok('时长超过间隔按整段处理', near(sampleAt(stU, 5).d1?.alpha ?? -1, 0.5, 1e-6), JSON.stringify(sampleAt(stU, 5)))
 
 /* ---------- 结果 ---------- */
 

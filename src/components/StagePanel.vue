@@ -28,6 +28,7 @@ import {
   moveKey,
   retimeKey,
   setEnterDir,
+  setKeyDuration,
   seedKey,
   segmentsInRange,
   segmentsOf,
@@ -192,6 +193,7 @@ function leaveNow() {
   // 同样先固定住其他人的位置，否则这一帧里只有「缺席」信息，别人会被判成离场
   seedKey(stage, time.value, sampled.value)
   clearPos(stage, selected.value.key, time.value)
+  setKeyDuration(stage, time.value, transDur.value)
   flash(`${selected.value.name} 已下场`)
 }
 
@@ -203,6 +205,7 @@ function enterNow() {
   const prev = lastPosOf(stage, d.key, time.value)
   setPos(stage, d.key, time.value, prev?.x ?? 0.5, prev?.y ?? 0.7)
   setEnterDir(stage, d.key, time.value, enterDir.value)
+  setKeyDuration(stage, time.value, transDur.value)
   flash(`${d.name} 已上场${enterDir.value === 'auto' ? '' : `（从${DIR_LABEL[enterDir.value]}）`}`)
 }
 
@@ -220,6 +223,8 @@ const stateNow = computed(() => {
 /** 上场方向：auto = 按目标位置自动选最近的边 */
 const enterDir = ref('auto')
 const DIR_LABEL = { left: '左侧', right: '右侧', top: '上方', bottom: '下方' }
+/** 上下场过渡时长（秒）：点「上场 / 下场」时写进那一帧 */
+const transDur = ref(0.5)
 
 // 左侧「各片段动作」面板：可折叠 + 内部滚动
 const clipsOpen = ref(true)
@@ -257,6 +262,15 @@ function editKeyTime(t) {
 }
 
 /** 关键帧时间显示到百分秒，方便看精度 */
+/** 直接编辑某一帧的上下场时长；留空 = 恢复「占满整段间隔」 */
+function editKeyDur(t) {
+  const key = stage.keys.find((k) => Math.abs(k.t - t) <= 0.061)
+  if (!key) return
+  const input = window.prompt('这一帧的上下场时长（秒，留空 = 自动占满间隔）', key.dur ? String(key.dur) : '')
+  if (input === null) return
+  setKeyDuration(stage, t, input.trim() === '' ? null : Number(input))
+}
+
 function fmtKey(t) {
   const m = Math.floor(t / 60)
   const s = Math.floor(t % 60)
@@ -558,6 +572,11 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
                 <option value="bottom">下方</option>
               </select>
             </label>
+            <label class="mini dur-pick">
+              时长
+              <input v-model.number="transDur" type="number" min="0.05" max="30" step="0.1" />
+              秒
+            </label>
             <button class="mini" type="button" :disabled="!selected || stateNow?.cls === 'on'" @click="enterNow">
               此刻上场
             </button>
@@ -573,6 +592,8 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
               <span class="kf-t">{{ fmtKey(k.t) }}</span>
               <button class="kf-mini" type="button" title="延后一帧" @click.stop="nudgeKey(k.t, 1)">▶</button>
               <button class="kf-mini" type="button" title="直接输入时间" @click.stop="editKeyTime(k.t)">✎</button>
+              <button class="kf-mini" type="button" title="上下场时长" @click.stop="editKeyDur(k.t)">⏱</button>
+              <span v-if="k.dur" class="kf-dur">{{ k.dur }}s</span>
               <span class="kf-n">{{ Object.keys(k.pos).length }}人</span>
               <span class="kf-hard" @click.stop="toggleHard(stage, k.t)">{{ k.hard ? '硬切' : '滑' }}</span>
               <span class="kf-del" @click.stop="dropKeyAt(k.t)">×</span>
@@ -1209,6 +1230,28 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   color: #cfe3ff;
 }
 
+
+.dur-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dur-pick input {
+  width: 46px;
+  background: #0f1729;
+  color: #cfe3ff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 1px 3px;
+  text-align: center;
+}
+
+.kf-dur {
+  color: #7fd0ff;
+}
 .kf-t {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }

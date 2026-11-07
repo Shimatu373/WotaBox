@@ -134,7 +134,19 @@ export function normalizeState(raw) {
               if (!p) continue
               pos[dk] = { x: Math.min(1, Math.max(0, num(p.x))), y: Math.min(1, Math.max(0, num(p.y))) }
             }
-            return { t: Math.max(0, num(k?.t)), pos, hard: Boolean(k?.hard) }
+            const out = { t: Math.max(0, num(k?.t)), pos, hard: Boolean(k?.hard) }
+            // 上下场过渡时长（秒）；没设置就占满整段间隔
+            const d = Number(k?.dur)
+            if (Number.isFinite(d) && d > 0) out.dur = Math.min(30, Math.max(0.05, Math.round(d * 100) / 100))
+            // 上场方向
+            if (k?.enter && typeof k.enter === 'object') {
+              const enter = {}
+              for (const [dk, dir] of Object.entries(k.enter)) {
+                if (['left', 'right', 'top', 'bottom'].includes(dir)) enter[dk] = dir
+              }
+              if (Object.keys(enter).length) out.enter = enter
+            }
+            return out
           })
           .sort((a, b) => a.t - b.t)
       : []

@@ -204,6 +204,21 @@ export function setEnterDir(stage, dancerKey, t, dir) {
   return key
 }
 
+/** 设置这一帧的上下场过渡时长（秒）。传 null/0 表示回到「占满整段间隔」 */
+export function setKeyDuration(stage, t, dur) {
+  const time = Math.max(0, Number(t) || 0)
+  let key = stage.keys.find((k) => Math.abs(k.t - time) <= KEY_EPS)
+  if (!key) {
+    key = { t: Math.round(time * 100) / 100, pos: {} }
+    stage.keys.push(key)
+    stage.keys.sort((a, b) => a.t - b.t)
+  }
+  const v = Number(dur)
+  if (dur === null || dur === undefined || !Number.isFinite(v) || v <= 0) delete key.dur
+  else key.dur = Math.min(30, Math.max(0.05, Math.round(v * 100) / 100))
+  return key
+}
+
 /* ---------------- 采样（位置 + 淡入淡出） ---------------- */
 
 const lerp = (a, b, p) => a + (b - a) * p
@@ -239,7 +254,10 @@ export function sampleAt(stage, time) {
   if (next && !(next.hard && next.t > t)) for (const d of Object.keys(next.pos)) all.add(d)
 
   const span = prev && next ? Math.max(1e-6, next.t - prev.t) : 1
-  const p = prev && next && !next.hard ? Math.min(1, Math.max(0, (t - prev.t) / span)) : 0
+  // 走位（两帧都在场）按整段插值；上下场用「这一帧指定的时长」，默认才退回整段
+  const moveP = prev && next && !next.hard ? Math.min(1, Math.max(0, (t - prev.t) / span)) : 0
+  const transDur = next ? Math.min(span, Math.max(0.05, Number(next.dur) || span)) : span
+  const transP = next ? Math.min(1, Math.max(0, (t - (next.t - transDur)) / transDur)) : 0
 
   for (const d of all) {
     const a = prev?.pos?.[d]
@@ -247,14 +265,14 @@ export function sampleAt(stage, time) {
 
     if (a && b) {
       if (next.hard && t >= next.t - 1e-6) out[d] = { x: b.x, y: b.y, alpha: 1 }
-      else out[d] = { x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p), alpha: 1 }
+      else out[d] = { x: lerp(a.x, b.x, moveP), y: lerp(a.y, b.y, moveP), alpha: 1 }
       continue
     }
     if (a && !b) {
       // 只在 prev 有 → 往后淡出；已经过了 next 就彻底离场
       if (!next) out[d] = { x: a.x, y: a.y, alpha: 1 }
       else if (next.hard) out[d] = { x: a.x, y: a.y, alpha: 1 }
-      else out[d] = { x: a.x, y: a.y, alpha: Math.max(0, 1 - p) }
+      else out[d] = { x: a.x, y: a.y, alpha: Math.max(0, 1 - transP) }
       continue
     }
     if (!a && b) {
@@ -267,9 +285,9 @@ export function sampleAt(stage, time) {
         const dir = (next.enter && next.enter[d]) || autoEdge(b)
         const from = enterStart(b, dir)
         out[d] = {
-          x: lerp(from.x, b.x, p),
-          y: lerp(from.y, b.y, p),
-          alpha: Math.min(1, p),
+          x: lerp(from.x, b.x, transP),
+          y: lerp(from.y, b.y, transP),
+          alpha: Math.min(1, transP),
         }
       }
     }
