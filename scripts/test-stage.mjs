@@ -15,6 +15,7 @@ import {
   removeKeyAt,
   renameDancer,
   sampleAt,
+  seedKey,
   segmentsInRange,
   setPos,
   toggleHard,
@@ -161,6 +162,38 @@ addDancer(st8, 'B')
 pasteSegments(st8, 'd2', cloneSegments(st8, 'd1'))
 eq('粘贴到另一个打师', st8.lines.d2[0].steps, [{ kind: 'text', text: '改过的动作' }])
 ok('两个打师的动作互不影响', st8.lines.d1 !== st8.lines.d2)
+
+/* ---------- 回归：拖动新建帧不能把其他人「挤」下线 ---------- */
+
+const st9 = fresh()
+addDancer(st9, 'A')
+addDancer(st9, 'B')
+// 0 秒两人都在场
+setPos(st9, 'd1', 0, 0.3, 0.7)
+setPos(st9, 'd2', 0, 0.7, 0.7)
+// 10 秒时只拖 d1：先按真实流程 seed 当前队形，再改 d1
+const at10 = sampleAt(st9, 10)
+seedKey(st9, 10, at10)
+setPos(st9, 'd1', 10, 0.1, 0.2)
+const mid = sampleAt(st9, 10)
+ok('被拖的打师到了新位置', near(mid.d1.x, 0.1) && near(mid.d1.y, 0.2), JSON.stringify(mid))
+ok('没被拖的打师仍在场（不会被淡出）', mid.d2 && near(mid.d2.alpha, 1), JSON.stringify(mid))
+ok('没被拖的打师位置被固定住', near(mid.d2.x, 0.7) && near(mid.d2.y, 0.7))
+
+// seedKey 不覆盖帧里已有的坐标
+seedKey(st9, 10, { d1: { x: 0.9, y: 0.9, alpha: 1 } })
+const k10 = st9.keys.find((k) => near(k.t, 10))
+ok('seedKey 不覆盖已有坐标', near(k10.pos.d1.x, 0.1))
+
+// 已淡出的不会被补进来
+const st10 = fresh()
+addDancer(st10, 'A')
+setPos(st10, 'd1', 0, 0.5, 0.5)
+setPos(st10, 'd1', 20, 0.5, 0.5)
+clearPos(st10, 'd1', 20) // 20 秒离场
+seedKey(st10, 20, sampleAt(st10, 20.001))
+const k20 = st10.keys.find((k) => near(k.t, 20))
+ok('已经离场的人不会被 seed 补回来', !k20.pos.d1, JSON.stringify(k20.pos))
 
 /* ---------- 结果 ---------- */
 

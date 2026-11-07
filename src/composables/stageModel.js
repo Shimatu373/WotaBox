@@ -93,6 +93,28 @@ export function clearPos(stage, dancerKey, t, { createIfMissing = true } = {}) {
   return key
 }
 
+/**
+ * 在时间 t 补一个「完整队形」的关键帧。
+ *
+ * 修一个真实的坑：拖某个圆点时如果直接在 t 新建帧，这一帧里就只有他一个人，
+ * 采样时其他人会被判定成「不在场」→ 整队自动淡出。
+ * 所以新建帧前先把当前画面上所有**在场**的打师位置灌进去（已在帧里的不覆盖）。
+ */
+export function seedKey(stage, t, sampled) {
+  const time = Math.max(0, Number(t) || 0)
+  let key = stage.keys.find((k) => Math.abs(k.t - time) <= KEY_EPS)
+  if (!key) {
+    key = { t: Math.round(time * 100) / 100, pos: {} }
+    stage.keys.push(key)
+    stage.keys.sort((a, b) => a.t - b.t)
+  }
+  for (const [dk, p] of Object.entries(sampled || {})) {
+    if (!p || (p.alpha ?? 1) < 0.05) continue // 已经淡出的不补
+    if (!key.pos[dk]) key.pos[dk] = { x: clamp01(p.x), y: clamp01(p.y) }
+  }
+  return key
+}
+
 export function removeKeyAt(stage, t) {
   const i = stage.keys.findIndex((k) => Math.abs(k.t - t) <= KEY_EPS)
   if (i === -1) return false

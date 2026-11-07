@@ -23,6 +23,7 @@ import {
   removeSegment,
   renameDancer,
   sampleAt,
+  seedKey,
   segmentsInRange,
   segmentsOf,
   setPos,
@@ -142,6 +143,9 @@ function startDrag(e, dancerKey) {
     return
   }
   selectedKey.value = dancerKey
+  // 关键：先把「此刻全队在哪儿」写进这一帧，再改被拖的那个人
+  // 否则新建的帧里只有他一个人，其他人会被采样判成「不在场」而集体淡出
+  seedKey(stage, time.value, sampled.value)
   dragKey = dancerKey
   dragging.value = dancerKey
   e.target.setPointerCapture?.(e.pointerId)
@@ -166,6 +170,8 @@ function endDrag(e) {
 /** 让当前打师在「此刻」离场（这一帧没有他的坐标 = 不在场） */
 function leaveNow() {
   if (!selected.value) return
+  // 同样先固定住其他人的位置，否则这一帧里只有「缺席」信息，别人会被判成离场
+  seedKey(stage, time.value, sampled.value)
   clearPos(stage, selected.value.key, time.value)
 }
 
@@ -257,10 +263,38 @@ function addTextToClip(clip) {
 
 /* ---------------- 进度条 ---------------- */
 
-function onBarPointer(e) {
-  const rect = e.currentTarget.getBoundingClientRect()
-  seek(((e.clientX - rect.left) / rect.width) * dur.value)
+/** 进度条：按下即跳、按住拖动连续跟随（pointer capture 保证手指滑出条外也不断） */
+const barEl = ref(null)
+let barDragging = false
+
+function barTimeAt(e) {
+  const el = barEl.value
+  if (!el) return 0
+  const rect = el.getBoundingClientRect()
+  return ((e.clientX - rect.left) / rect.width) * dur.value
 }
+
+function startBar(e) {
+  barDragging = true
+  e.currentTarget.setPointerCapture?.(e.pointerId)
+  seek(barTimeAt(e))
+}
+
+function moveBar(e) {
+  if (barDragging) seek(barTimeAt(e))
+}
+
+function endBar(e) {
+  barDragging = false
+  e.currentTarget?.releasePointerCapture?.(e.pointerId)
+}
+
+/** 关键帧列表只显示「和当前打师有关」的那些，避免几十个 chip 挤成一团 */
+const visibleKeys = computed(() => {
+  const k = selectedKey.value
+  if (!k) return stage.keys
+  return stage.keys.filter((key) => key.pos[k])
+})
 
 const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
 </script>
@@ -388,30 +422,47 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             </div>
           </div>
 
-          <div class="bar" @pointerdown="onBarPointer">
+          <div
+            ref="barEl"
+            class="bar"
+            @pointerdown="startBar"
+            @pointermove="moveBar"
+            @pointerup="endBar"
+            @pointercancel="endBar"
+          >
             <div
               v-for="(c, i) in clips"
               :key="c.id"
               class="seg"
               :style="{ left: pct(c.a), width: pct(c.b - c.a), background: CLIP_COLORS[i % CLIP_COLORS.length] }"
               :title="`${c.name} ${fmtClock(c.a)}–${fmtClock(c.b)}`"
-              @pointerdown.stop="seek(c.a)"
             >
               <span class="seg-label">{{ c.name }}</span>
             </div>
             <div class="playhead" :style="{ left: pct(time) }" />
           </div>
 
+          <!-- 时间显示 / 关键帧信息：舞台缩小后这里才有地方 -->
+          <div class="time-row">
+            <span class="t-now">{{ fmtClock(time) }}</span>
+            <span class="t-total">/ {{ fmtClock(dur) }}</span>
+            <span class="t-sep">·</span>
+            <span class="t-info">片段 {{ clips.length }}</span>
+            <span class="t-sep">·</span>
+            <span class="t-info">
+              关键帧 {{ stage.keys.length }}<template v-if="selected">（{{ selected.name }}：{{ visibleKeys.length }}）</template>
+            </span>
+            <span v-if="followMode" class="t-follow">跟随播放器 {{ fmtClock(playerClock.position) }}</span>
+          </div>
+
           <div class="bar-tools">
             <button class="mini" type="button" :disabled="!selected" @click="leaveNow">此刻让选中打师离场</button>
             <button class="mini" type="button" @click="snapshotHere">把当前队形存成关键帧</button>
-            <span class="kf">关键帧 {{ stage.keys.length }}</span>
-            <span v-if="followMode" class="kf">跟随播放器：{{ fmtClock(playerClock.position) }}</span>
           </div>
 
-          <div v-if="stage.keys.length" class="keys">
+          <div v-if="visibleKeys.length" class="keys">
             <button
-              v-for="k in stage.keys"
+              v-for="k in visibleKeys"
               :key="k.t"
               class="kf-chip"
               :class="{ hard: k.hard }"
@@ -424,6 +475,9 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
               <span class="kf-del" @click.stop="dropKeyAt(k.t)">×</span>
             </button>
           </div>
+          <p v-else-if="stage.keys.length" class="keys-empty">
+            这个打师还没有关键帧（选中某个打师时，这里只显示他自己的帧）
+          </p>
         </section>
       </div>
     </div>
@@ -705,16 +759,20 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   min-height: 0;
 }
 
+/* 舞台别占满：留出进度条、时间与关键帧的位置 */
 .stage-wrap {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .stage {
   position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
+  width: min(100%, calc(46vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  max-height: 46vh;
   background:
     radial-gradient(ellipse at 50% 40%, #12203a 0%, #0a1220 70%),
     #0a1220;
@@ -787,13 +845,16 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   overflow: hidden;
   flex: none;
   cursor: pointer;
+  touch-action: none;
 }
 
+/* 片段色块只做视觉，不挡进度条的拖动 */
 .seg {
   position: absolute;
   top: 0;
   bottom: 0;
   opacity: 0.35;
+  pointer-events: none;
   display: flex;
   align-items: center;
   padding: 0 4px;
@@ -824,6 +885,49 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   gap: 6px;
   flex-wrap: wrap;
   flex: none;
+}
+
+.time-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  color: #5f728c;
+  flex: none;
+  flex-wrap: wrap;
+}
+
+.t-now {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: #cfe3ff;
+}
+
+.t-total {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: #5f728c;
+}
+
+.t-sep {
+  color: #33405a;
+}
+
+.t-info {
+  font-size: 10px;
+  color: #7f9ac0;
+}
+
+.t-follow {
+  margin-left: auto;
+  font-size: 10px;
+  color: #7fd0ff;
+}
+
+.keys-empty {
+  margin: 0;
+  font-size: 10px;
+  color: #4d5a70;
 }
 
 .kf {
