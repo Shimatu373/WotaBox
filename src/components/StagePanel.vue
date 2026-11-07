@@ -12,6 +12,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { fmtClock, stageOf, textStep } from '../composables/useChoreo.js'
 import { playerClock, clockHasFile } from '../composables/playerClock.js'
+import { useAudioPlayer } from '../composables/useAudioPlayer.js'
 import {
   addDancer,
   clearPos,
@@ -45,10 +46,16 @@ const dur = computed(() => Math.max(props.song.duration || 0, ...clips.value.map
 /* ---------------- 时间轴 ---------------- */
 
 const localTime = ref(0)
-const playing = ref(false)
-const followMode = ref(false)
+const playing = ref(false) // 静默预览状态（不驱动播放器时用）
 const recordMode = ref(false)
-const followAvailable = computed(() => clockHasFile(props.song.fileName))
+
+/** 播放器（全局单例）：载入了同一首歌时，由这个页面遥控它 */
+const player = useAudioPlayer()
+const playerReady = computed(() => clockHasFile(props.song.fileName))
+/** 界面上显示的播放状态：有播放器就看播放器，否则看静默预览 */
+if (playerReady.value) localTime.value = Math.min(dur.value, player.position.value)
+
+const playingNow = computed(() => (playerReady.value ? player.isPlaying.value : playing.value))
 
 const time = computed(() => localTime.value)
 
@@ -67,9 +74,18 @@ function tick(ts) {
   rafId = requestAnimationFrame(tick)
 }
 
+/**
+ * 播放：载入了同一首歌就**遥控播放器**（有声），否则用静默预览时钟。
+ * 方向是「走位页 → 播放器」，所以这里的播放/暂停/跳转都要落到播放器上。
+ */
 function playLocal() {
+  if (playerReady.value) {
+    if (localTime.value >= dur.value) localTime.value = 0
+    player.seek(localTime.value)
+    player.play()
+    return
+  }
   if (playing.value) return
-  followMode.value = false
   if (localTime.value >= dur.value) localTime.value = 0
   playing.value = true
   lastTs = 0
@@ -79,29 +95,28 @@ function playLocal() {
 function pauseLocal() {
   playing.value = false
   cancelAnimationFrame(rafId)
+  if (playerReady.value && player.isPlaying.value) player.pause()
 }
 
+/** 跳转：同步给播放器（播放中的话会自动从新位置继续） */
 function seek(t) {
-  pauseLocal()
-  localTime.value = Math.max(0, Math.min(dur.value, Number(t) || 0))
+  const target = Math.max(0, Math.min(dur.value, Number(t) || 0))
+  cancelAnimationFrame(rafId)
+  playing.value = false
+  localTime.value = target
+  if (playerReady.value) {
+    player.seek(target)
+    if (player.isPlaying.value) player.play()
+  }
 }
 
-// 跟随播放器：位置镜像过来（只读，不回写播放器）
+// 时间以播放器为准：只要它在放这首歌，走位页就跟着它的进度走
 watch(
   () => playerClock.position,
   (p) => {
-    if (followMode.value) localTime.value = Math.min(dur.value, p)
+    if (playerReady.value && player.isPlaying.value) localTime.value = Math.min(dur.value, p)
   },
 )
-
-function toggleFollow() {
-  if (!followAvailable.value) return
-  followMode.value = !followMode.value
-  if (followMode.value) {
-    pauseLocal()
-    localTime.value = playerClock.position
-  }
-}
 
 onBeforeUnmount(() => cancelAnimationFrame(rafId))
 
@@ -342,18 +357,11 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
           <button class="ghost" type="button" :class="{ on: recordMode }" @click="recordMode = !recordMode">
             {{ recordMode ? '✋ 走位编辑中' : '解锁走位编辑' }}
           </button>
-          <button
-            class="ghost"
-            type="button"
-            :class="{ on: followMode }"
-            :disabled="!followAvailable"
-            :title="followAvailable ? '跟着播放器的进度走' : '先在播放器里载入这首歌'"
-            @click="toggleFollow"
-          >
-            {{ followMode ? '⏱ 跟随播放器' : '跟随播放器' }}
-          </button>
-          <button class="ghost" type="button" @click="playing ? pauseLocal() : playLocal()">
-            {{ playing ? '⏸ 暂停' : '▶ 预览' }}
+          <span class="sync-state" :class="{ on: playerReady }">
+            {{ playerReady ? '🔊 本页控制播放器' : '🔇 静默预览（播放器未载入这首歌）' }}
+          </span>
+          <button class="ghost" type="button" @click="playingNow ? pauseLocal() : playLocal()">
+            {{ playingNow ? '⏸ 暂停' : '▶ 播放' }}
           </button>
         </div>
       </header>
@@ -491,7 +499,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             <span class="t-info">
               关键帧 {{ stage.keys.length }}<template v-if="selected">（{{ selected.name }}：{{ visibleKeys.length }}）</template>
             </span>
-            <span v-if="followMode" class="t-follow">跟随播放器 {{ fmtClock(playerClock.position) }}</span>
+            <span v-if="playerReady && player.loopEnabled" class="t-follow">播放器 A-B 循环开启中</span>
           </div>
 
           <div class="bar-tools">
@@ -556,6 +564,19 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
 }
 
 .head-actions {
+.sync-state {
+  font-size: 10px;
+  color: #7f9ac0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #0f1729;
+  border: 1px solid var(--line);
+}
+
+.sync-state.on {
+  color: #7fd0ff;
+  border-color: #2f6fd0;
+}
   margin-left: auto;
   display: flex;
   gap: 6px;

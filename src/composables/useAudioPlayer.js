@@ -26,7 +26,19 @@ export function fmtTime(t) {
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
+/**
+ * 全局单例：整首歌的解码 buffer 只留一份。
+ * 走位视图要用同一个播放器来「遥控」播放，所以不能每个组件各建一个。
+ * （onUnmounted 里只停音源、不关共享 AudioContext，交给最先创建它的组件即可）
+ */
+let sharedPlayer = null
+
 export function useAudioPlayer() {
+  if (!sharedPlayer) sharedPlayer = createPlayer()
+  return sharedPlayer
+}
+
+function createPlayer() {
   const buffer = shallowRef(null)
   const fileName = ref('')
   const duration = ref(0)
