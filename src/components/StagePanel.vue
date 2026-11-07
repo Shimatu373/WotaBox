@@ -537,6 +537,11 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
               >
                 <span class="dot-name">{{ d.name }}</span>
               </div>
+              <!-- 舞台朝向：图的下方＝观众那一面 -->
+              <div class="front-edge" aria-hidden="true">
+                <span class="front-label">舞台正面 · 观众侧</span>
+              </div>
+
               <p v-if="!stage.dancers.length" class="stage-empty">左侧「＋ 加打师」开始摆站位</p>
               <p v-if="recordMode" class="record-hint">走位编辑：只能拖动**当前选中**的打师，拖动即在当前时刻记录位置</p>
             </div>
@@ -1019,6 +1024,29 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   touch-action: none;
 }
 
+
+/* 舞台正面：下方边缘一条线 + 文字，只做提示，不挡拖拽 */
+.front-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(127, 208, 255, 0.35);
+  background: linear-gradient(to top, rgba(47, 111, 208, 0.14), transparent);
+  pointer-events: none;
+}
+
+.front-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(127, 208, 255, 0.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
 .stage.recording {
   border-color: #e0574f;
 }
@@ -1073,7 +1101,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
 }
 
 .record-hint {
-  bottom: 10px;
+  bottom: 32px;
   color: #e0574f;
 }
 
