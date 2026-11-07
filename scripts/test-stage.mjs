@@ -15,6 +15,8 @@ import {
   removeKeyAt,
   renameDancer,
   sampleAt,
+  moveKey,
+  retimeKey,
   seedKey,
   segmentsInRange,
   setPos,
@@ -194,6 +196,36 @@ clearPos(st10, 'd1', 20) // 20 秒离场
 seedKey(st10, 20, sampleAt(st10, 20.001))
 const k20 = st10.keys.find((k) => near(k.t, 20))
 ok('已经离场的人不会被 seed 补回来', !k20.pos.d1, JSON.stringify(k20.pos))
+
+/* ---------- 关键帧时间编辑 ---------- */
+
+const st11 = fresh()
+addDancer(st11, 'A') // 会在 0 秒落一帧
+removeKeyAt(st11, 0) // 清掉，方便后面测「挪到 0 秒」
+setPos(st11, 'd1', 5, 0.2, 0.2)
+setPos(st11, 'd1', 10, 0.8, 0.8)
+
+const moved = moveKey(st11, 5, 1 / 30)
+// 时间戳按毫秒取整，所以 5 + 1/30 → 5.033
+ok('逐帧微调：时间前移 1/30 秒', moved?.moved === true && near(moved.t, 5.033, 1e-9), JSON.stringify(moved))
+ok('关键帧仍按时间排序', st11.keys[0].t < st11.keys[1].t)
+
+const retimed = retimeKey(st11, moved.t, 7.25)
+ok('直接改时间', retimed?.moved === true && near(retimed.t, 7.25), JSON.stringify(retimed))
+
+// 撞到另一个关键帧：不移动，交给界面提示
+const clash = retimeKey(st11, 7.25, 10)
+ok('撞帧时不覆盖（返回 moved:false）', clash?.moved === false, JSON.stringify(clash))
+ok('原帧位置不变', st11.keys.some((k) => near(k.t, 7.25)))
+ok('目标帧也没被动', st11.keys.some((k) => near(k.t, 10)))
+
+// 挪到 0 秒：允许（0 秒此时没有帧）
+const toZero = retimeKey(st11, 7.25, 0)
+ok('可以挪到 0 秒', toZero?.moved === true && near(toZero.t, 0), JSON.stringify(toZero))
+
+// 负数被钳到 0——此时 0 秒已被占用，应当拒绝而不是合并
+const negative = retimeKey(st11, 10, -3)
+ok('负数钳到 0 且遇占位不合并', negative?.moved === false, JSON.stringify(negative))
 
 /* ---------- 结果 ---------- */
 

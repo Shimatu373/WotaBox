@@ -23,6 +23,8 @@ import {
   removeSegment,
   renameDancer,
   sampleAt,
+  moveKey,
+  retimeKey,
   seedKey,
   segmentsInRange,
   segmentsOf,
@@ -185,6 +187,34 @@ function snapshotHere() {
 
 function dropKeyAt(t) {
   removeKeyAt(stage, t)
+}
+/** 逐帧微调按 30fps 算（音频没有帧率概念，1/30 秒作为"一帧"精度足够用） */
+const STEP_FRAME = 1 / 30
+
+/** 关键帧逐帧前后挪 */
+function nudgeKey(t, dir) {
+  const res = moveKey(stage, t, dir * STEP_FRAME)
+  if (res?.moved) seek(res.t)
+  else if (res) flash('这一格已经有关键帧了')
+}
+
+/** 直接输入时间（精确到毫秒） */
+function editKeyTime(t) {
+  const input = window.prompt('关键帧时间（秒，可带小数）', String(Number(t.toFixed(3))))
+  if (input === null) return
+  const next = Number(input)
+  if (!Number.isFinite(next) || next < 0) return
+  const res = retimeKey(stage, t, next)
+  if (res?.moved) seek(res.t)
+  else if (res) flash('那个位置已经有关键帧了')
+}
+
+/** 关键帧时间显示到百分秒，方便看精度 */
+function fmtKey(t) {
+  const m = Math.floor(t / 60)
+  const s = Math.floor(t % 60)
+  const cs = Math.round((t % 1) * 100)
+  return `${m}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`
 }
 
 /* ---------------- 复制动作线 ---------------- */
@@ -351,6 +381,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             <div v-for="row in clipRows" :key="row.clip.id" class="clip-row">
               <div class="clip-top">
                 <i class="swatch small" :style="{ background: row.color }" />
+                <button class="mini jump" type="button" title="跳到这个片段的开头" @click="seek(row.clip.a)">⏮</button>
                 <span class="clip-name">{{ row.clip.name }}</span>
                 <span class="clip-time">{{ fmtClock(row.clip.a) }}–{{ fmtClock(row.clip.b) }}</span>
               </div>
@@ -439,6 +470,14 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             >
               <span class="seg-label">{{ c.name }}</span>
             </div>
+            <div
+              v-for="k in stage.keys"
+              :key="'mk' + k.t"
+              class="kf-mark"
+              :class="{ on: selectedKey && k.pos[selectedKey] }"
+              :style="{ left: pct(k.t) }"
+              :title="fmtKey(k.t)"
+            />
             <div class="playhead" :style="{ left: pct(time) }" />
           </div>
 
@@ -461,19 +500,15 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
           </div>
 
           <div v-if="visibleKeys.length" class="keys">
-            <button
-              v-for="k in visibleKeys"
-              :key="k.t"
-              class="kf-chip"
-              :class="{ hard: k.hard }"
-              type="button"
-              @click="seek(k.t)"
-            >
-              {{ fmtClock(k.t) }}
+            <span v-for="k in visibleKeys" :key="k.t" class="kf-chip" :class="{ hard: k.hard }" @click="seek(k.t)">
+              <button class="kf-mini" type="button" title="提前一帧" @click.stop="nudgeKey(k.t, -1)">◀</button>
+              <span class="kf-t">{{ fmtKey(k.t) }}</span>
+              <button class="kf-mini" type="button" title="延后一帧" @click.stop="nudgeKey(k.t, 1)">▶</button>
+              <button class="kf-mini" type="button" title="直接输入时间" @click.stop="editKeyTime(k.t)">✎</button>
               <span class="kf-n">{{ Object.keys(k.pos).length }}人</span>
               <span class="kf-hard" @click.stop="toggleHard(stage, k.t)">{{ k.hard ? '硬切' : '滑' }}</span>
               <span class="kf-del" @click.stop="dropKeyAt(k.t)">×</span>
-            </button>
+            </span>
           </div>
           <p v-else-if="stage.keys.length" class="keys-empty">
             这个打师还没有关键帧（选中某个打师时，这里只显示他自己的帧）
@@ -976,5 +1011,43 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
 
 .kf-del {
   color: #e0574f;
+}
+/* 进度条上的关键帧标记（只做视觉，不挡拖动） */
+.kf-mark {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 7px;
+  margin-left: -1px;
+  background: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+
+.kf-mark.on {
+  background: #e6c07a;
+}
+
+/* 关键帧 chip 里的小按钮 */
+.kf-mini {
+  border: 0;
+  background: transparent;
+  color: #7f9ac0;
+  font-size: 9px;
+  padding: 0 1px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.kf-mini:hover {
+  color: #cfe3ff;
+}
+
+.kf-t {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.jump {
+  padding: 0 5px;
+  flex: none;
 }
 </style>

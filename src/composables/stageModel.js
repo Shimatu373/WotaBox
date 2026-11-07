@@ -122,6 +122,28 @@ export function removeKeyAt(stage, t) {
   return true
 }
 
+/**
+ * 把某个关键帧改到新时间（高精度编辑 / 逐帧微调用）。
+ * 撞到别的帧就不动 —— 两帧合并会丢数据，宁可让调用方提示一下。
+ */
+export function retimeKey(stage, fromT, toT) {
+  const key = stage.keys.find((k) => Math.abs(k.t - fromT) <= KEY_EPS)
+  if (!key) return null
+  const target = Math.max(0, Math.round((Number(toT) || 0) * 1000) / 1000)
+  const clash = stage.keys.some((k) => k !== key && Math.abs(k.t - target) <= KEY_EPS)
+  if (clash) return { key, moved: false, t: key.t }
+  key.t = target
+  stage.keys.sort((a, b) => a.t - b.t)
+  return { key, moved: true, t: target }
+}
+
+/** 相对移动 delta 秒（逐帧用 1/30） */
+export function moveKey(stage, t, delta) {
+  const key = stage.keys.find((k) => Math.abs(k.t - t) <= KEY_EPS)
+  if (!key) return null
+  return retimeKey(stage, t, key.t + delta)
+}
+
 export function toggleHard(stage, t) {
   const key = stage.keys.find((k) => Math.abs(k.t - t) <= KEY_EPS)
   if (!key) return null

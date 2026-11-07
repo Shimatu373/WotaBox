@@ -118,6 +118,10 @@ npm run deploy   # 构建并发布到 Cloudflare Pages
 - 全国光棒地图
 - 「你知道吗」小知识
 
+## 更新记录
+
+各版本改了什么、给朋友发版时该怎么说，见 [CHANGELOG.md](CHANGELOG.md)。
+
 ## 项目状态
 
 开发中，接口与数据结构仍在变动。
