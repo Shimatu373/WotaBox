@@ -11,6 +11,8 @@
  */
 import {
   addClipToState,
+  buildChoreoPayload,
+  mergeChoreoState,
   clipsBySongIn,
   clipsOfSongIn,
   emptyState,
@@ -176,6 +178,37 @@ eq('关键帧按时间排序', s2.keys.map((k) => k.t), [5, 10])
 eq('坐标钳制到 0–1', [s2.keys[1].pos.d1.x, s2.keys[1].pos.d1.y], [1, 0])
 ok('硬切标记保留', s2.keys[0].hard === true)
 eq('打师动作线', s2.lines.d1[0].steps, [{ kind: 'waza', id: 'w1' }, { kind: 'text', text: '接棒' }])
+
+/* ---------- 编排专用导出 / 合并 ---------- */
+
+const srcState = emptyState()
+const srcSong = { fileName: 'share.mp3', duration: 180 }
+addClipToState(srcState, { song: srcSong, name: '副歌', a: 10, b: 30, steps: [wazaStep('w1')] })
+songOf(srcState, 'share.mp3::180').dancers.push({ key: 'd1', name: 'A', color: '#e0574f' })
+
+const payload = buildChoreoPayload(srcState)
+eq('导出带 kind 标记', payload.kind, 'wotabox-choreo')
+eq('导出统计', payload.counts, { clips: 1, songs: 1 })
+eq('导出不含收藏夹等其它键', Object.keys(payload.data).sort(), ['clips', 'songs'])
+ok('导出的片段带 steps', payload.data.clips[0].steps[0].kind === 'waza')
+
+// 合并到空状态
+const target = emptyState()
+const st1 = mergeChoreoState(target, payload.data)
+eq('空库合并：新增 1 条', [st1.clipsAdded, st1.clipsUpdated], [1, 0])
+eq('空库合并：站位导入 1 首', st1.songsImported, 1)
+eq('合并后片段数', target.clips.length, 1)
+
+// 再合并一次：同 id 覆盖，不重复
+const st2 = mergeChoreoState(target, payload.data)
+eq('重复合并：不新增', [st2.clipsAdded, st2.clipsUpdated], [0, 1])
+eq('重复合并后片段数不变', target.clips.length, 1)
+eq('本地已有站位时不覆盖', st2.songsSkipped, 1)
+
+// 本地已有站位但为空壳 → 允许导入
+const target2 = emptyState()
+addClipToState(target2, { song: srcSong, name: '占位', a: 1, b: 2, steps: [] })
+eq('空壳站位可以导入', mergeChoreoState(target2, payload.data).songsImported, 1)
 
 /* ---------- 结果 ---------- */
 

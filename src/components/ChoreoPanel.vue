@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
 import DifficultyBar from './DifficultyBar.vue'
 import StagePanel from './StagePanel.vue'
+import { downloadChoreo, importChoreoFile } from '../composables/useChoreoShare.js'
 import { WAZA } from '../data/waza.js'
 import {
   choreoStore,
@@ -42,6 +43,31 @@ async function copyGroup(group) {
 
 function del(id, name) {
   if (window.confirm(`删除片段「${name}」？`)) removeClip(id)
+}
+
+/* ---------------- 单独导出 / 导入编排 ---------------- */
+
+const shareMsg = ref('')
+
+function exportChoreo() {
+  const n = downloadChoreo()
+  shareMsg.value = `已导出 ${n.clips} 条片段、${n.songs} 首歌的站位（不含收藏夹）`
+  setTimeout(() => (shareMsg.value = ''), 4000)
+}
+
+async function importChoreo(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file) return
+  try {
+    const s = await importChoreoFile(file)
+    const parts = [`新增 ${s.clipsAdded} 条`, `更新 ${s.clipsUpdated} 条`]
+    if (s.songsImported) parts.push(`站位 ${s.songsImported} 首`)
+    if (s.songsSkipped) parts.push(`跳过 ${s.songsSkipped} 首（本地已有站位，不覆盖）`)
+    shareMsg.value = '导入完成：' + parts.join('，')
+  } catch (err) {
+    shareMsg.value = err.message || '导入失败'
+  }
+  e.target.value = ''
 }
 
 /** 站位视图（全屏子页面） */
@@ -273,8 +299,19 @@ function addWaza(id) {
       </div>
     </div>
 
+    <div class="share-row">
+      <button class="copy" type="button" @click="exportChoreo">导出编排</button>
+      <label class="copy file-label">
+        导入编排
+        <input type="file" accept="application/json,.json" @change="importChoreo" />
+      </label>
+      <span v-if="shareMsg" class="share-msg">{{ shareMsg }}</span>
+    </div>
+
     <p class="hint">
-      「复制编排」会生成一段纯文本，可以直接发群里和同伴对动作。数据存在本机，不上传。
+      「复制编排」会生成一段纯文本，可以直接发群里和同伴对动作；
+      「导出编排」给的是 JSON 文件，**只含片段与站位，不含收藏夹**，方便单独分享。
+      数据都存本机，不上传。
     </p>
   </CollapsibleCard>
 
@@ -458,6 +495,35 @@ function addWaza(id) {
   padding-left: 8px;
 }
 
+
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.file-label {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+}
+
+.file-label input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.share-msg {
+  font-size: 10px;
+  color: #7fd0ff;
+  flex: 1;
+  min-width: 0;
+}
 .hint {
   margin: 12px 0 0;
   font-size: 11px;

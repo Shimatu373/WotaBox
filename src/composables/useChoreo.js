@@ -108,6 +108,11 @@ export function toText(group, nameOf) {
 
 /* ---------------- 站位 / 走位 ---------------- */
 
+/** 供「导出 / 导入编排」用：立刻落盘 */
+export function saveChoreoNow() {
+  persist()
+}
+
 /** 取某首歌的打师名单与走位（不存在会自动建） */
 export function stageOf(songKeyValue) {
   return songOf(choreoStore, songKeyValue)

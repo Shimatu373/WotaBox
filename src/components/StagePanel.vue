@@ -453,7 +453,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
               </div>
               <div class="steps">
                 <template v-if="row.segments.length">
-                  <span v-for="(seg, si) in row.segments" :key="si" class="seg">
+                  <span v-for="(seg, si) in row.segments" :key="si" class="act-seg">
                     <span
                       v-for="(s, k) in seg.steps"
                       :key="k"
@@ -823,6 +823,13 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10px;
   color: #5f728c;
+}
+
+.act-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
 }
 
 .steps {

@@ -263,3 +263,61 @@ export function toTextOfGroup(group, nameOf) {
   })
   return lines.join('\n')
 }
+/* ---------------- 编排专用导出 / 合并 ---------------- */
+
+export const CHOREO_EXPORT_KIND = 'wotabox-choreo'
+
+/** 只装编排（片段 + 站位），不含收藏夹 */
+export function buildChoreoPayload(state) {
+  return {
+    app: 'WotaBox',
+    kind: CHOREO_EXPORT_KIND,
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    counts: {
+      clips: state.clips.length,
+      songs: Object.keys(state.songs || {}).length,
+    },
+    data: {
+      clips: state.clips.map((c) => ({ ...c, steps: c.steps.map((s) => ({ ...s })) })),
+      songs: JSON.parse(JSON.stringify(state.songs || {})),
+    },
+  }
+}
+
+/**
+ * 合并别人分享的编排：
+ *   - 片段按 id 合并，同 id 覆盖
+ *   - 站位数据：本地这首歌还没有任何站位就整首导入；本地已有则跳过（不覆盖别人正在编的东西）
+ */
+export function mergeChoreoState(state, incoming) {
+  const src = normalizeState(incoming)
+  const stats = { clipsAdded: 0, clipsUpdated: 0, songsImported: 0, songsSkipped: 0 }
+
+  const byId = new Map(state.clips.map((c) => [c.id, c]))
+  for (const clip of src.clips) {
+    const existing = byId.get(clip.id)
+    if (existing) {
+      Object.assign(existing, clip)
+      stats.clipsUpdated++
+    } else {
+      state.clips.push(clip)
+      byId.set(clip.id, clip)
+      stats.clipsAdded++
+    }
+  }
+
+  for (const [key, song] of Object.entries(src.songs)) {
+    const local = state.songs[key]
+    const localEmpty =
+      !local ||
+      (!local.dancers.length && !local.keys.length && !Object.keys(local.lines || {}).length)
+    if (localEmpty) {
+      state.songs[key] = song
+      stats.songsImported++
+    } else {
+      stats.songsSkipped++
+    }
+  }
+  return stats
+}
