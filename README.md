@@ -87,6 +87,10 @@ src/
 ## 开发脚本
 
 ```bash
+npm test    # 静态检查 + 数据校验 + 编排/站位模型测试（提交前跑一遍）
+```
+
+```bash
 node scripts/test-bpm.mjs    # BPM 自动分析准确度（合成鼓点轨）
 node scripts/test-tap.mjs    # 手动点拍逻辑
 node scripts/test-data.mjs   # 技数据完整性（重复 id / 非法类型 / 非法难度档位）

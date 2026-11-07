@@ -15,6 +15,7 @@ import { playerClock, clockHasFile } from '../composables/playerClock.js'
 import { useAudioPlayer } from '../composables/useAudioPlayer.js'
 import {
   addDancer,
+  canDragDancer,
   clearPos,
   cloneSegments,
   importClipSteps,
