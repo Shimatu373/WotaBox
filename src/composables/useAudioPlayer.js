@@ -2,6 +2,7 @@ import { computed, onUnmounted, ref, shallowRef } from 'vue'
 import { getAudioContext, resumeAudio } from './sharedAudio.js'
 import { analyzeAudioBuffer } from './bpmAnalysis.js'
 import { bpm as sharedBpm } from './sharedState.js'
+import { syncPlayerClock } from './playerClock.js'
 
 /**
  * 音乐播放器（Web Audio 版）
@@ -63,6 +64,7 @@ export function useAudioPlayer() {
       fileName.value = file.name
       duration.value = decoded.duration
       position.value = 0
+      syncPlayerClock({ fileName: file.name, duration: decoded.duration, position: 0 })
       loopA.value = 0
       loopB.value = Math.min(decoded.duration, 30)
       rate.value = 1
@@ -131,6 +133,7 @@ export function useAudioPlayer() {
     if (timer) clearInterval(timer)
     timer = setInterval(() => {
       position.value = computePosition()
+      syncPlayerClock({ position: position.value })
     }, 100)
   }
 
@@ -163,6 +166,7 @@ export function useAudioPlayer() {
     offsetAtStart = startOffset
     position.value = startOffset
     isPlaying.value = true
+    syncPlayerClock({ fileName: fileName.value, position: startOffset, isPlaying: true })
 
     src.onended = () => {
       if (source === src) {
@@ -180,6 +184,7 @@ export function useAudioPlayer() {
     position.value = computePosition()
     stopSource()
     isPlaying.value = false
+    syncPlayerClock({ position: position.value, isPlaying: false })
     releaseWakeLock()
   }
 
@@ -190,6 +195,7 @@ export function useAudioPlayer() {
   function seek(t) {
     const target = clamp(Number(t) || 0, 0, duration.value)
     position.value = target
+    syncPlayerClock({ position: target })
     if (isPlaying.value) {
       const wasPlaying = true
       stopSource()

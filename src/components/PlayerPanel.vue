@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
 import DifficultyBar from './DifficultyBar.vue'
 import { useAudioPlayer } from '../composables/useAudioPlayer.js'
-import { clipsOfSong, addClip, removeClip } from '../composables/useChoreo.js'
+import { clipsOfSong, addClip, removeClip, wazaStep, textStep } from '../composables/useChoreo.js'
 import { WAZA } from '../data/waza.js'
 
 const {
@@ -89,6 +89,7 @@ function onRateChange(e) {
 const draft = ref(null)
 const picking = ref(false)
 const kw = ref('')
+const customText = ref('')
 
 function startSave() {
   if (!canLoop.value) {
@@ -96,15 +97,17 @@ function startSave() {
     return
   }
   const suggested = ['主歌', '副歌', 'C 段'][clips.value.length] || '片段'
-  draft.value = { name: suggested, a: loopA.value, b: loopB.value, wazaIds: [], note: '' }
+  draft.value = { name: suggested, a: loopA.value, b: loopB.value, steps: [], note: '' }
   picking.value = false
   kw.value = ''
+  customText.value = ''
 }
 
 function cancelSave() {
   draft.value = null
   picking.value = false
   kw.value = ''
+  customText.value = ''
 }
 
 function confirmSave() {
@@ -114,12 +117,13 @@ function confirmSave() {
     name: draft.value.name,
     a: draft.value.a,
     b: draft.value.b,
-    wazaIds: draft.value.wazaIds,
+    steps: draft.value.steps,
     note: draft.value.note,
   })
   draft.value = null
   picking.value = false
   kw.value = ''
+  customText.value = ''
 }
 
 const pickList = computed(() => {
@@ -134,17 +138,26 @@ const pickList = computed(() => {
 
 function pickWaza(id) {
   if (!draft.value) return
-  draft.value.wazaIds.push(id)
+  draft.value.steps.push(wazaStep(id))
   picking.value = false
   kw.value = ''
 }
 
-function removeWazaAt(i) {
-  draft.value?.wazaIds.splice(i, 1)
+/** 自定义动作：原创技、缝合技这类图鉴里没有的，直接写成文本 */
+function addCustomStep() {
+  if (!draft.value) return
+  const text = customText.value.trim()
+  if (!text) return
+  draft.value.steps.push(textStep(text))
+  customText.value = ''
 }
 
-function moveWaza(i, delta) {
-  const arr = draft.value?.wazaIds
+function removeStepAt(i) {
+  draft.value?.steps.splice(i, 1)
+}
+
+function moveStep(i, delta) {
+  const arr = draft.value?.steps
   if (!arr) return
   const j = i + delta
   if (j < 0 || j >= arr.length) return
@@ -297,7 +310,7 @@ function delClip(clip) {
           >
             <span class="sec-name">{{ c.name }}</span>
             <span class="sec-time">{{ fmtTime(c.a) }}–{{ fmtTime(c.b) }}</span>
-            <span v-if="c.wazaIds.length" class="sec-n">{{ c.wazaIds.length }} 技</span>
+            <span v-if="c.steps.length" class="sec-n">{{ c.steps.length }} 动作</span>
             <span class="sec-del" @click.stop="delClip(c)">×</span>
           </button>
           <button v-if="!draft" class="sec-chip add" type="button" @click="startSave">
@@ -322,20 +335,22 @@ function delClip(clip) {
           </div>
 
           <div class="ed-block">
-            <div class="ed-label">副歌技（按顺序）</div>
-            <ol v-if="draft.wazaIds.length" class="wz-list">
-              <li v-for="(id, i) in draft.wazaIds" :key="i">
+            <div class="ed-label">动作（按顺序）</div>
+            <ol v-if="draft.steps.length" class="wz-list">
+              <li v-for="(s, i) in draft.steps" :key="i">
                 <span class="wz-idx">{{ i + 1 }}</span>
-                <span class="wz-name">{{ nameOf(id) }}</span>
-                <button class="wz-btn" type="button" @click="moveWaza(i, -1)">↑</button>
-                <button class="wz-btn" type="button" @click="moveWaza(i, 1)">↓</button>
-                <button class="wz-btn del" type="button" @click="removeWazaAt(i)">×</button>
+                <span class="wz-name" :class="{ custom: s.kind === 'text' }">
+                  {{ s.kind === 'text' ? s.text : nameOf(s.id) }}
+                </span>
+                <button class="wz-btn" type="button" @click="moveStep(i, -1)">↑</button>
+                <button class="wz-btn" type="button" @click="moveStep(i, 1)">↓</button>
+                <button class="wz-btn del" type="button" @click="removeStepAt(i)">×</button>
               </li>
             </ol>
-            <p v-else class="ed-empty">还没有关联技，可以添加，也可以留空</p>
+            <p v-else class="ed-empty">还没有动作，可以从图鉴里选，也可以直接写自定义动作</p>
 
             <button v-if="!picking" class="wz-add" type="button" @click="picking = true">
-              ＋ 添加副歌技
+              ＋ 从图鉴添加
             </button>
 
             <div v-else class="picker-box">
@@ -356,6 +371,20 @@ function delClip(clip) {
               </ul>
               <button class="wz-add" type="button" @click="picking = false">收起</button>
             </div>
+
+            <div class="custom-row">
+              <input
+                v-model="customText"
+                class="ed-input"
+                type="text"
+                placeholder="自定义动作：原创 / 缝合，例如「蒼月剣 → 雷蛇」"
+                @keyup.enter="addCustomStep"
+              />
+              <button class="wz-add" type="button" @click="addCustomStep">＋ 加自定义</button>
+            </div>
+            <p class="ed-note">
+              图鉴里没有的技（社团原创、临时缝合）写成文字就行，导出编排时也会原样带上。
+            </p>
           </div>
 
           <div class="ed-row">
@@ -975,6 +1004,35 @@ function delClip(clip) {
 .ed-empty {
   margin: 4px 0 0;
   font-size: 11px;
+  color: #5f728c;
+}
+
+/* 自定义动作（原创 / 缝合）：用暖色区分，避免和图鉴技混淆 */
+.wz-name.custom {
+  color: #e6c07a;
+  font-style: italic;
+}
+
+.custom-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.custom-row .ed-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-row .wz-add {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.ed-note {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
   color: #5f728c;
 }
 

@@ -1,105 +1,119 @@
 import { reactive, watch } from 'vue'
+import {
+  addClipToState,
+  clipsBySongIn,
+  clipsOfSongIn,
+  emptyState,
+  migrateV1,
+  needsMigration,
+  normalizeState,
+  removeClipFromState,
+  songKeyOf,
+  songOf,
+  textStep,
+  toTextOfGroup,
+  updateClipInState,
+  wazaStep,
+} from './choreoModel.js'
 
 /**
- * 编排片段（歌曲片段 + 可用副歌技序列）
+ * 编排片段：歌曲片段（时间轴标注）+ 按顺序的动作序列
  *
- * 一条记录 = 某首歌的某一段 × 按顺序使用的副歌技。
- * 这是打师之间交流节目编排的最小单元，也是"这段怎么打"的记录。
+ * v2 起：
+ *   - 动作从 wazaIds 升级为 steps，支持「引用图鉴技」和「自定义文本（原创/缝合）」
+ *   - 每首歌另有 songs[songKey] 保存打师名单、走位关键帧、各打师的动作线
  *
- * 结构：
- *   { id, songKey, fileName, duration, name, a, b, wazaIds[], note, createdAt }
+ * 迁移：v1 的 wota:choreo:v1 若存在且 v2 为空，第一次加载时自动转换；v1 原样保留不删。
  */
 
-const KEY = 'wota:choreo:v1'
+const KEY = 'wota:choreo:v2'
+const LEGACY_KEY = 'wota:choreo:v1'
 
-function isValid(c) {
-  return (
-    c &&
-    typeof c.id === 'string' &&
-    typeof c.fileName === 'string' &&
-    typeof c.a === 'number' &&
-    typeof c.b === 'number' &&
-    Array.isArray(c.wazaIds)
-  )
-}
-
-function load() {
+function readJson(key) {
   try {
-    const raw = localStorage.getItem(KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    const arr = Array.isArray(parsed?.clips) ? parsed.clips : []
-    return arr.filter(isValid)
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : null
   } catch {
-    return []
+    return null
   }
 }
 
-export const choreoStore = reactive({ clips: load() })
+function loadInitial() {
+  const v2 = readJson(KEY)
+  if (v2) return normalizeState(v2)
 
-watch(
-  choreoStore,
-  () => {
+  const v1 = readJson(LEGACY_KEY)
+  if (needsMigration(v2, v1)) {
+    const migrated = migrateV1(v1)
+    // 立刻落盘成 v2，v1 留着（只读备份，避免迁移出问题时数据没了）
     try {
-      localStorage.setItem(KEY, JSON.stringify(choreoStore))
+      localStorage.setItem(KEY, JSON.stringify(migrated))
     } catch {
       /* 忽略 */
     }
-  },
-  { deep: true }
-)
+    return migrated
+  }
+  return emptyState()
+}
 
-/** 歌曲身份：文件名 + 时长，够区分同一首歌的重复载入 */
+export const choreoStore = reactive(loadInitial())
+
+/** 立刻写盘：不要只依赖 watch —— 用户点完保存马上关标签页时，watch 的异步 flush 会丢数据 */
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(choreoStore))
+  } catch {
+    /* 忽略 */
+  }
+}
+
+// 走位关键帧之类可能被直接改（不经下面这些函数），用深度 watch 兜底
+watch(choreoStore, persist, { deep: true })
+
+/* ---------------- 片段 ---------------- */
+
 export function songKey(song) {
-  return `${song.fileName}::${Math.round(song.duration || 0)}`
+  return songKeyOf(song)
 }
 
 export function clipsOfSong(song) {
-  if (!song || !song.fileName) return []
-  const k = songKey(song)
-  return choreoStore.clips.filter((c) => c.songKey === k).sort((a, b) => a.a - b.a)
+  return clipsOfSongIn(choreoStore, song)
 }
 
-export function addClip({ song, name, a, b, wazaIds = [], note = '' }) {
-  const clip = {
-    id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-    songKey: songKey(song),
-    fileName: song.fileName,
-    duration: Math.round(song.duration || 0),
-    name: (name || '片段').trim() || '片段',
-    a,
-    b,
-    wazaIds: [...wazaIds],
-    note,
-    createdAt: Date.now(),
-  }
-  choreoStore.clips.push(clip)
+export function clipsBySong() {
+  return clipsBySongIn(choreoStore)
+}
+
+export function addClip({ song, name, a, b, steps, note = '' }) {
+  const clip = addClipToState(choreoStore, { song, name, a, b, steps, note })
+  persist()
+  return clip
+}
+
+export function updateClip(id, patch) {
+  const clip = updateClipInState(choreoStore, id, patch)
+  persist()
   return clip
 }
 
 export function removeClip(id) {
-  const i = choreoStore.clips.findIndex((c) => c.id === id)
-  if (i !== -1) choreoStore.clips.splice(i, 1)
+  const done = removeClipFromState(choreoStore, id)
+  if (done) persist()
+  return done
 }
 
-export function updateClip(id, patch) {
-  const c = choreoStore.clips.find((x) => x.id === id)
-  if (c) Object.assign(c, patch)
+export function toText(group, nameOf) {
+  return toTextOfGroup(group, nameOf)
 }
 
-/** 按歌曲归组，组内按起始时间排序 */
-export function clipsBySong() {
-  const map = new Map()
-  for (const c of choreoStore.clips) {
-    if (!map.has(c.songKey)) {
-      map.set(c.songKey, { songKey: c.songKey, fileName: c.fileName, duration: c.duration, clips: [] })
-    }
-    map.get(c.songKey).clips.push(c)
-  }
-  const groups = [...map.values()]
-  for (const g of groups) g.clips.sort((x, y) => x.a - y.a)
-  return groups
+/* ---------------- 站位 / 走位 ---------------- */
+
+/** 取某首歌的打师名单与走位（不存在会自动建） */
+export function stageOf(songKeyValue) {
+  return songOf(choreoStore, songKeyValue)
 }
+
+/* ---------------- 小工具 ---------------- */
 
 export function fmtClock(t) {
   if (!Number.isFinite(t) || t < 0) t = 0
@@ -108,20 +122,4 @@ export function fmtClock(t) {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-/**
- * 生成一份便于发群里的纯文本编排
- * nameOf: (wazaId) => 显示名
- */
-export function toText(group, nameOf) {
-  const lines = [`【${group.fileName}】${fmtClock(group.duration)}`]
-  group.clips.forEach((c, i) => {
-    lines.push(`${i + 1}. ${c.name}　${fmtClock(c.a)} – ${fmtClock(c.b)}`)
-    if (c.wazaIds.length) {
-      lines.push('   ' + c.wazaIds.map((id, k) => `${k + 1}.${nameOf(id)}`).join(' → '))
-    } else {
-      lines.push('   （未关联副歌技）')
-    }
-    if (c.note) lines.push(`   备注：${c.note}`)
-  })
-  return lines.join('\n')
-}
+export { textStep, wazaStep }
