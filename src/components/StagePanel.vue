@@ -24,6 +24,7 @@ import {
   removeSegment,
   renameDancer,
   sampleAt,
+  lastPosOf,
   moveKey,
   retimeKey,
   seedKey,
@@ -190,7 +191,32 @@ function leaveNow() {
   // 同样先固定住其他人的位置，否则这一帧里只有「缺席」信息，别人会被判成离场
   seedKey(stage, time.value, sampled.value)
   clearPos(stage, selected.value.key, time.value)
+  flash(`${selected.value.name} 已下场`)
 }
+
+/** 让选中的打师在此刻上场：优先回到他上次的位置 */
+function enterNow() {
+  const d = selected.value
+  if (!d) return
+  seedKey(stage, time.value, sampled.value)
+  const prev = lastPosOf(stage, d.key, time.value)
+  setPos(stage, d.key, time.value, prev?.x ?? 0.5, prev?.y ?? 0.7)
+  flash(`${d.name} 已上场`)
+}
+
+/** 此刻这个打师在不在场上（alpha 0 = 不在场，中间值 = 淡入/淡出中） */
+const stateNow = computed(() => {
+  const k = selectedKey.value
+  if (!k) return null
+  const s = sampled.value[k]
+  if (!s) return { label: '不在场', alpha: 0, cls: 'off' }
+  if (s.alpha >= 0.995) return { label: '在场', alpha: 1, cls: 'on' }
+  if (s.alpha <= 0.005) return { label: '不在场', alpha: 0, cls: 'off' }
+  return { label: s.alpha < 0.5 ? '正在下场' : '正在上场', alpha: s.alpha, cls: 'mid' }
+})
+
+// 左侧「各片段动作」面板：可折叠 + 内部滚动
+const clipsOpen = ref(true)
 
 /** 把当前画面的所有站位存成关键帧（方便复制一个队形到别的时间点） */
 function snapshotHere() {
@@ -377,6 +403,14 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             </div>
             <div v-else class="dancer-empty">还没有打师，点下面加一个</div>
 
+            <div v-if="selected && stateNow" class="dancer-state" :class="stateNow.cls">
+              <i class="state-dot" />
+              此刻：{{ stateNow.label }}
+              <span v-if="stateNow.alpha > 0 && stateNow.alpha < 1" class="state-alpha">
+                {{ Math.round(stateNow.alpha * 100) }}%
+              </span>
+            </div>
+
             <div class="line-actions">
               <button class="mini" type="button" :disabled="!selected" @click="copyLine">复制动作</button>
               <button class="mini" type="button" :disabled="!lineClip" @click="pasteLine">粘贴</button>
@@ -385,7 +419,11 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
           </div>
 
           <div class="panel clips-panel">
-            <div class="panel-title">该打师在各片段的动作</div>
+            <button class="panel-toggle" type="button" @click="clipsOpen = !clipsOpen">
+              <span class="panel-title">该打师在各片段的动作</span>
+              <span class="caret">{{ clipsOpen ? '▾' : '▸' }}</span>
+            </button>
+            <div v-show="clipsOpen" class="clips-body">
             <div v-for="row in clipRows" :key="row.clip.id" class="clip-row">
               <div class="clip-top">
                 <i class="swatch small" :style="{ background: row.color }" />
@@ -414,6 +452,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
               </div>
             </div>
             <p v-if="!clipRows.length" class="none">先选一个打师</p>
+            </div>
           </div>
 
           <div class="panel">
@@ -503,7 +542,12 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
           </div>
 
           <div class="bar-tools">
-            <button class="mini" type="button" :disabled="!selected" @click="leaveNow">此刻让选中打师离场</button>
+            <button class="mini" type="button" :disabled="!selected || stateNow?.cls === 'on'" @click="enterNow">
+              此刻上场
+            </button>
+            <button class="mini" type="button" :disabled="!selected || stateNow?.cls === 'off'" @click="leaveNow">
+              此刻下场
+            </button>
             <button class="mini" type="button" @click="snapshotHere">把当前队形存成关键帧</button>
           </div>
 
@@ -776,6 +820,74 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   flex-wrap: wrap;
 }
 
+
+/* 打师此刻状态：在场 / 不在场 / 淡入淡出中 */
+.dancer-state {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #7f9ac0;
+}
+
+.state-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4d5a70;
+  flex: none;
+}
+
+.dancer-state.on .state-dot {
+  background: #43c463;
+  box-shadow: 0 0 6px rgba(67, 196, 99, 0.7);
+}
+
+.dancer-state.off .state-dot {
+  background: #44556f;
+}
+
+.dancer-state.mid .state-dot {
+  background: #e8b53c;
+  box-shadow: 0 0 6px rgba(232, 181, 60, 0.7);
+}
+
+.dancer-state.on {
+  color: #a8e6b8;
+}
+
+.dancer-state.mid {
+  color: #f7dc9a;
+}
+
+.state-alpha {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* 片段动作面板：可折叠 + 内部滚动 */
+.panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 0 0 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.caret {
+  font-size: 10px;
+  color: #5f728c;
+}
+
+.clips-body {
+  max-height: 34vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
 .dancer-list {
   display: flex;
   flex-wrap: wrap;

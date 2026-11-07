@@ -144,6 +144,18 @@ export function moveKey(stage, t, delta) {
   return retimeKey(stage, t, key.t + delta)
 }
 
+/**
+ * 找这个打师上一次出现的位置（优先取 beforeT 之前最近的一次，否则任意一次）。
+ * 「让他上场」时用它把圆点放回原位，而不是凭空跳到舞台中央。
+ */
+export function lastPosOf(stage, dancerKey, beforeT = Infinity) {
+  const withPos = stage.keys.filter((k) => k.pos[dancerKey])
+  if (!withPos.length) return null
+  const before = [...withPos].filter((k) => k.t <= beforeT + 1e-6).sort((a, b) => b.t - a.t)[0]
+  const pick = before || [...withPos].sort((a, b) => a.t - b.t)[0]
+  return { ...pick.pos[dancerKey] }
+}
+
 export function toggleHard(stage, t) {
   const key = stage.keys.find((k) => Math.abs(k.t - t) <= KEY_EPS)
   if (!key) return null

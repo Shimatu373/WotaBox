@@ -15,6 +15,7 @@ import {
   removeKeyAt,
   renameDancer,
   sampleAt,
+  lastPosOf,
   moveKey,
   retimeKey,
   seedKey,
@@ -226,6 +227,22 @@ ok('可以挪到 0 秒', toZero?.moved === true && near(toZero.t, 0), JSON.strin
 // 负数被钳到 0——此时 0 秒已被占用，应当拒绝而不是合并
 const negative = retimeKey(st11, 10, -3)
 ok('负数钳到 0 且遇占位不合并', negative?.moved === false, JSON.stringify(negative))
+
+/* ---------- 上场：找回上一次的位置 ---------- */
+
+const st12 = fresh()
+addDancer(st12, 'A')
+setPos(st12, 'd1', 10, 0.25, 0.8)
+setPos(st12, 'd1', 20, 0.75, 0.2)
+clearPos(st12, 'd1', 20) // 20 秒下场
+
+ok('能找到下场前的位置', JSON.stringify(lastPosOf(st12, 'd1', 30)) === JSON.stringify({ x: 0.25, y: 0.8 }))
+const st13 = fresh()
+addDancer(st13, 'A')
+removeKeyAt(st13, 0) // 去掉 addDancer 顺手落的 0 秒帧
+setPos(st13, 'd1', 10, 0.25, 0.8)
+ok('之前没有帧时用后面那帧兜底', JSON.stringify(lastPosOf(st13, 'd1', 0)) === JSON.stringify({ x: 0.25, y: 0.8 }))
+ok('从未出现过的打师返回 null', lastPosOf(st12, 'd9', 10) === null)
 
 /* ---------- 结果 ---------- */
 
