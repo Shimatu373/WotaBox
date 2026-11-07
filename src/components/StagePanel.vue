@@ -34,6 +34,7 @@ import {
   removeClipSegments,
   segmentsOfClip,
   setPos,
+  toggleSelection,
   toggleHard,
 } from '../composables/stageModel.js'
 
@@ -137,7 +138,8 @@ function addOne() {
 }
 
 function pickDancer(key) {
-  selectedKey.value = key
+  // 再点一次同一个打师 = 取消选中（右侧进度条会显示全部片段）
+  selectedKey.value = toggleSelection(selectedKey.value, key)
 }
 
 function rename() {
@@ -435,7 +437,9 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
               <input class="name-input" :value="selected.name" @change="renameDancer(stage, selected.key, $event.target.value)" />
               <button class="mini" type="button" @click="dropDancer">删</button>
             </div>
-            <div v-else class="dancer-empty">还没有打师，点下面加一个</div>
+            <div v-else class="dancer-empty">
+              {{ stage.dancers.length ? '未选中打师（点下面的名字选中，再点一次取消）' : '还没有打师，点下面加一个' }}
+            </div>
 
             <div v-if="selected && stateNow" class="dancer-state" :class="stateNow.cls">
               <i class="state-dot" />

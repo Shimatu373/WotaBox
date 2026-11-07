@@ -337,6 +337,11 @@ export function importClipSteps(stage, dancerKey, clip) {
  * 不看采样，直接按关键帧推：他「出现在某个帧」→ 一直待着，直到下一个没有他的帧
  * （那一帧前 `dur` 秒内淡出）。这样短到 0.1 秒的露脸也不会被采样步长漏掉。
  */
+/** 再次点击已选中的打师 = 取消选中（此时进度条显示全部片段） */
+export function toggleSelection(current, key) {
+  return current && current === key ? null : key
+}
+
 export function isOnStageDuring(stage, dancerKey, a, b) {
   if (!dancerKey) return true // 没选打师时全部视为在场
   if (!(b > a)) return false

@@ -30,6 +30,7 @@ import {
   segmentsOfClip,
   setPos,
   toggleHard,
+  toggleSelection,
 } from '../src/composables/stageModel.js'
 
 let pass = 0
@@ -402,6 +403,13 @@ clearPos(stH, 'd1', 30)
 toggleHard(stH, 30)
 ok('硬切后立刻隐藏', isOnStageDuring(stH, 'd1', 30, 40) === false)
 ok('硬切前仍然显示', isOnStageDuring(stH, 'd1', 10, 25) === true)
+
+/* ---------- 取消选中 ---------- */
+
+eq('点另一个打师 → 切换选中', toggleSelection('d1', 'd2'), 'd2')
+ok('点已选中的打师 → 取消选中', toggleSelection('d1', 'd1') === null)
+eq('未选中时点一下 → 选中', toggleSelection(null, 'd1'), 'd1')
+ok('取消选中后进度条显示全部片段（selectedKey 为空）', !toggleSelection('d1', 'd1'))
 
 /* ---------- 结果 ---------- */
 
