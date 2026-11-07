@@ -15,8 +15,11 @@ import {
   removeKeyAt,
   renameDancer,
   sampleAt,
+  autoEdge,
+  enterStart,
   lastPosOf,
   moveKey,
+  setEnterDir,
   retimeKey,
   seedKey,
   segmentsInRange,
@@ -103,7 +106,7 @@ clearPos(st4c, 'd1', 0) // 0 秒时 d1 不在场
 setPos(st4c, 'd1', 10, 0.8, 0.2)
 const half = sampleAt(st4c, 5)
 ok('淡入进行中 alpha 0.5', near(half.d1?.alpha ?? -1, 0.5), JSON.stringify(half))
-ok('淡入时用出现帧的位置', near(half.d1.x, 0.8))
+ok('滑入中途尚未到达目标位置', Math.abs(half.d1.x - 0.8) + Math.abs(half.d1.y - 0.2) > 0.01, JSON.stringify(half))
 
 /* ---------- 采样：硬切 ---------- */
 
@@ -243,6 +246,39 @@ removeKeyAt(st13, 0) // 去掉 addDancer 顺手落的 0 秒帧
 setPos(st13, 'd1', 10, 0.25, 0.8)
 ok('之前没有帧时用后面那帧兜底', JSON.stringify(lastPosOf(st13, 'd1', 0)) === JSON.stringify({ x: 0.25, y: 0.8 }))
 ok('从未出现过的打师返回 null', lastPosOf(st12, 'd9', 10) === null)
+
+/* ---------- 上场：从舞台边缘滑入 ---------- */
+
+const stE = fresh()
+addDancer(stE, 'A')
+removeKeyAt(stE, 0)
+// 0 秒只有 d2（d1 不在），10 秒 d1 出现在 (0.5, 0.5)
+setPos(stE, 'd1', 0, 0.5, 0.5)
+clearPos(stE, 'd1', 0)
+setPos(stE, 'd1', 10, 0.5, 0.5)
+
+const earlyIn = sampleAt(stE, 1) // p≈0.1，还在舞台外
+const halfIn = sampleAt(stE, 5)
+ok('默认从最近边缘滑入：起点在舞台外（x<0）', earlyIn.d1.x < 0, JSON.stringify(earlyIn))
+ok('滑入中途 alpha 约 0.5', Math.abs(halfIn.d1.alpha - 0.5) < 1e-6, JSON.stringify(halfIn))
+
+// 指定方向：上方
+setEnterDir(stE, 'd1', 10, 'top')
+const topEarly = sampleAt(stE, 1)
+ok('指定上方后从上方进场（y<0）', topEarly.d1.y < 0, JSON.stringify(topEarly))
+
+// 自动选边：目标靠右 → right
+ok('autoEdge 靠右时选右', autoEdge({ x: 0.95, y: 0.5 }) === 'right', autoEdge({ x: 0.95, y: 0.5 }))
+ok('autoEdge 靠下时选下', autoEdge({ x: 0.5, y: 0.95 }) === 'bottom', autoEdge({ x: 0.5, y: 0.95 }))
+eq('enterStart 左侧起点', enterStart({ x: 0.3, y: 0.4 }, 'left').x < 0, true)
+
+// 硬切时不做滑入：到点前不出现，到点直接到位
+setEnterDir(stE, 'd1', 10, 'left')
+toggleHard(stE, 10)
+const before10 = sampleAt(stE, 9.9)
+ok('硬切：到点前不出现', before10.d1 === undefined || before10.d1.alpha === 0, JSON.stringify(before10))
+const atEnter = sampleAt(stE, 10)
+ok('硬切：到点直接到位', near(atEnter.d1.x, 0.5) && near(atEnter.d1.y, 0.5) && near(atEnter.d1.alpha, 1), JSON.stringify(atEnter))
 
 /* ---------- 结果 ---------- */
 

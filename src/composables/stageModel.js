@@ -163,6 +163,47 @@ export function toggleHard(stage, t) {
   return key
 }
 
+/* ---------------- 上场方向 ---------------- */
+
+export const ENTER_DIRS = ['left', 'right', 'top', 'bottom']
+const OFF_STAGE = 0.12 // 起点在舞台外多远（按宽高的比例）
+
+/** 没指定方向时按目标位置自动选最近的边 */
+export function autoEdge(pos) {
+  const dist = [pos.x, 1 - pos.x, pos.y, 1 - pos.y]
+  return ENTER_DIRS[dist.indexOf(Math.min(...dist))]
+}
+
+/** 某个方向对应的舞台外起点 */
+export function enterStart(pos, dir) {
+  switch (dir) {
+    case 'left':
+      return { x: -OFF_STAGE, y: pos.y }
+    case 'right':
+      return { x: 1 + OFF_STAGE, y: pos.y }
+    case 'top':
+      return { x: pos.x, y: -OFF_STAGE }
+    default:
+      return { x: pos.x, y: 1 + OFF_STAGE }
+  }
+}
+
+/** 给「这一帧开始出现」的打师指定入场方向（null / 'auto' 表示清掉，走自动判断） */
+export function setEnterDir(stage, dancerKey, t, dir) {
+  const time = Math.max(0, Number(t) || 0)
+  let key = stage.keys.find((k) => Math.abs(k.t - time) <= KEY_EPS)
+  if (!key) {
+    key = { t: Math.round(time * 100) / 100, pos: {} }
+    stage.keys.push(key)
+    stage.keys.sort((a, b) => a.t - b.t)
+  }
+  if (!key.enter) key.enter = {}
+  if (!dir || dir === 'auto') delete key.enter[dancerKey]
+  else if (ENTER_DIRS.includes(dir)) key.enter[dancerKey] = dir
+  if (!Object.keys(key.enter).length) delete key.enter
+  return key
+}
+
 /* ---------------- 采样（位置 + 淡入淡出） ---------------- */
 
 const lerp = (a, b, p) => a + (b - a) * p
@@ -217,9 +258,20 @@ export function sampleAt(stage, time) {
       continue
     }
     if (!a && b) {
-      // 只在 next 有 → 从 0 淡入（硬切则直接出现）
-      if (next.hard || !prev) out[d] = { x: b.x, y: b.y, alpha: t >= (next?.t ?? 0) - 1e-6 ? 1 : 0 }
-      else out[d] = { x: b.x, y: b.y, alpha: Math.min(1, p) }
+      // 上一帧没有、这一帧有 → 从舞台边缘滑入 + 淡入
+      //   方向优先用关键帧里指定的（key.enter[d]），没有就按目标位置选最近的边
+      //   硬切 / 没有前一帧（第一帧）时不做动画，直接出现
+      if (next.hard || !prev) {
+        out[d] = { x: b.x, y: b.y, alpha: t >= (next?.t ?? 0) - 1e-6 ? 1 : 0 }
+      } else {
+        const dir = (next.enter && next.enter[d]) || autoEdge(b)
+        const from = enterStart(b, dir)
+        out[d] = {
+          x: lerp(from.x, b.x, p),
+          y: lerp(from.y, b.y, p),
+          alpha: Math.min(1, p),
+        }
+      }
     }
   }
   return out

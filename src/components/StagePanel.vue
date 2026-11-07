@@ -27,6 +27,7 @@ import {
   lastPosOf,
   moveKey,
   retimeKey,
+  setEnterDir,
   seedKey,
   segmentsInRange,
   segmentsOf,
@@ -201,7 +202,8 @@ function enterNow() {
   seedKey(stage, time.value, sampled.value)
   const prev = lastPosOf(stage, d.key, time.value)
   setPos(stage, d.key, time.value, prev?.x ?? 0.5, prev?.y ?? 0.7)
-  flash(`${d.name} 已上场`)
+  setEnterDir(stage, d.key, time.value, enterDir.value)
+  flash(`${d.name} 已上场${enterDir.value === 'auto' ? '' : `（从${DIR_LABEL[enterDir.value]}）`}`)
 }
 
 /** 此刻这个打师在不在场上（alpha 0 = 不在场，中间值 = 淡入/淡出中） */
@@ -214,6 +216,10 @@ const stateNow = computed(() => {
   if (s.alpha <= 0.005) return { label: '不在场', alpha: 0, cls: 'off' }
   return { label: s.alpha < 0.5 ? '正在下场' : '正在上场', alpha: s.alpha, cls: 'mid' }
 })
+
+/** 上场方向：auto = 按目标位置自动选最近的边 */
+const enterDir = ref('auto')
+const DIR_LABEL = { left: '左侧', right: '右侧', top: '上方', bottom: '下方' }
 
 // 左侧「各片段动作」面板：可折叠 + 内部滚动
 const clipsOpen = ref(true)
@@ -542,6 +548,16 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
           </div>
 
           <div class="bar-tools">
+            <label class="mini dir-pick">
+              上场方向
+              <select v-model="enterDir">
+                <option value="auto">就近边缘</option>
+                <option value="left">左侧</option>
+                <option value="right">右侧</option>
+                <option value="top">上方</option>
+                <option value="bottom">下方</option>
+              </select>
+            </label>
             <button class="mini" type="button" :disabled="!selected || stateNow?.cls === 'on'" @click="enterNow">
               此刻上场
             </button>
@@ -1092,6 +1108,24 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   color: #7fd0ff;
 }
 
+
+.dir-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px;
+}
+
+.dir-pick select {
+  background: #0f1729;
+  color: #9db6d6;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: inherit;
+  padding: 1px 2px;
+}
 .keys-empty {
   margin: 0;
   font-size: 10px;
