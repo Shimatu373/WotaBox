@@ -158,11 +158,16 @@ const dragging = ref('')
 let dragKey = ''
 
 function startDrag(e, dancerKey) {
-  if (!recordMode.value) {
+  // 点到别的打师：先选中，不拖 —— 只靠一次点击就搬动别人太危险
+  if (selectedKey.value !== dancerKey) {
     selectedKey.value = dancerKey
     return
   }
-  selectedKey.value = dancerKey
+  const alpha = sampled.value[dancerKey]?.alpha ?? 0
+  if (!canDragDancer({ selectedKey: selectedKey.value, dancerKey, recordMode: recordMode.value, alpha })) {
+    if (recordMode.value && alpha <= 0.05) flash('这名打师此刻不在场，先「此刻上场」再拖')
+    return
+  }
   // 关键：先把「此刻全队在哪儿」写进这一帧，再改被拖的那个人
   // 否则新建的帧里只有他一个人，其他人会被采样判成「不在场」而集体淡出
   seedKey(stage, time.value, sampled.value)
@@ -501,7 +506,11 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
                 v-for="d in stage.dancers"
                 :key="d.key"
                 class="dot"
-                :class="{ sel: d.key === selectedKey, drag: dragging === d.key }"
+                :class="{
+                  sel: d.key === selectedKey,
+                  drag: dragging === d.key,
+                  off: (sampled[d.key]?.alpha ?? 0) <= 0.05,
+                }"
                 :style="{
                   left: ((sampled[d.key]?.x ?? 0.5) * 100) + '%',
                   top: ((sampled[d.key]?.y ?? 0.7) * 100) + '%',
@@ -516,7 +525,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
                 <span class="dot-name">{{ d.name }}</span>
               </div>
               <p v-if="!stage.dancers.length" class="stage-empty">左侧「＋ 加打师」开始摆站位</p>
-              <p v-if="recordMode" class="record-hint">走位编辑：拖动圆点即在当前时刻记录位置</p>
+              <p v-if="recordMode" class="record-hint">走位编辑：只能拖动**当前选中**的打师，拖动即在当前时刻记录位置</p>
             </div>
           </div>
 
@@ -1008,6 +1017,10 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
   cursor: pointer;
   transition: left 80ms linear, top 80ms linear;
   touch-action: none;
+}
+
+.dot.off {
+  pointer-events: none;
 }
 
 .dot.sel {

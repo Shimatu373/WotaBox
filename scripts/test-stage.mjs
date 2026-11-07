@@ -16,6 +16,7 @@ import {
   renameDancer,
   sampleAt,
   autoEdge,
+  canDragDancer,
   enterStart,
   lastPosOf,
   moveKey,
@@ -314,6 +315,15 @@ ok('清空时长后回到整段插值', near(sampleAt(stU, 5).d1?.alpha ?? -1, 0
 // 时长超过间隔时按整段算（不会更慢）
 setKeyDuration(stU, 10, 30)
 ok('时长超过间隔按整段处理', near(sampleAt(stU, 5).d1?.alpha ?? -1, 0.5, 1e-6), JSON.stringify(sampleAt(stU, 5)))
+
+/* ---------- 拖动权限：只能动当前选中、且在场的打师 ---------- */
+
+ok('选中自己 + 编辑模式 + 在场 → 可拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd1', recordMode: true, alpha: 1 }))
+ok('未开编辑模式 → 不可拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd1', recordMode: false, alpha: 1 }) === false)
+ok('不是选中的打师 → 不可拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd2', recordMode: true, alpha: 1 }) === false)
+ok('不在场（alpha 0）→ 不可拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd1', recordMode: true, alpha: 0 }) === false)
+ok('刚淡入一点点也能拖', canDragDancer({ selectedKey: 'd1', dancerKey: 'd1', recordMode: true, alpha: 0.2 }))
+ok('没传 dancerKey → 不可拖', canDragDancer({ selectedKey: null, dancerKey: null, recordMode: true, alpha: 1 }) === false)
 
 /* ---------- 结果 ---------- */
 

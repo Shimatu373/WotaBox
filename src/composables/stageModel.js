@@ -337,6 +337,20 @@ export function pasteSegments(stage, dancerKey, segments) {
   return stage.lines[dancerKey]
 }
 
+/**
+ * 现在能不能拖动某个圆点。
+ *
+ * 三条限制，都是为了「别手一滑就把别人挪了」：
+ *   1. 必须处于走位编辑模式
+ *   2. 只能是当前选中的打师
+ *   3. 必须真的在场（alpha > 0.05）—— 没上场的打师根本不该被碰到
+ */
+export function canDragDancer({ selectedKey, dancerKey, recordMode, alpha }) {
+  if (!recordMode) return false
+  if (!dancerKey || selectedKey !== dancerKey) return false
+  return (Number(alpha) || 0) > 0.05
+}
+
 /** 某个打师还没被分配动作的片段（用于「从片段导入」提示） */
 export function clipsForDancer(stage, dancerKey, clips) {
   return clips.map((c) => {
