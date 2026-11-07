@@ -331,6 +331,36 @@ export function importClipSteps(stage, dancerKey, clip) {
   return list
 }
 
+/**
+ * 这个打师在时间段 [a, b) 里有没有上过场。
+ *
+ * 不看采样，直接按关键帧推：他「出现在某个帧」→ 一直待着，直到下一个没有他的帧
+ * （那一帧前 `dur` 秒内淡出）。这样短到 0.1 秒的露脸也不会被采样步长漏掉。
+ */
+export function isOnStageDuring(stage, dancerKey, a, b) {
+  if (!dancerKey) return true // 没选打师时全部视为在场
+  if (!(b > a)) return false
+  const keys = stage.keys
+  if (!keys.length) return false
+  const eps = 1e-6
+  const has = (k) => Boolean(k && k.pos && k.pos[dancerKey])
+
+  // 区间内部出现的新帧
+  for (const k of keys) if (k.t > a + eps && k.t < b - eps && has(k)) return true
+
+  // a 之前最后一帧
+  let prev = null
+  for (const k of keys) if (k.t <= a + eps) prev = k
+  if (!has(prev)) return false
+
+  const next = keys.find((k) => k.t > a + eps)
+  if (!next || has(next)) return true // 之后没有变化，或下一帧仍在场
+
+  // 下一帧把他放下：不管滑还是硬切，淡出都在 next.t 结束，
+  // 所以「在 [a,b) 里还看得见」等价于 a < next.t
+  return next.t > a
+}
+
 /** 这个打师在某个片段上的动作段（按 clipId 归属，老数据退回区间判断） */
 export function segmentsOfClip(stage, dancerKey, clip) {
   return segmentsOf(stage, dancerKey).filter((s) =>

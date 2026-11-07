@@ -10,6 +10,7 @@ import {
   clearPos,
   cloneSegments,
   importClipSteps,
+  isOnStageDuring,
   pasteSegments,
   removeDancer,
   removeKeyAt,
@@ -363,6 +364,44 @@ addDancer(stL, 'A')
 stL.lines.d1 = [{ at: 30, steps: [{ kind: 'text', text: '老数据' }] }]
 eq('无 clipId 时退回区间判断', segmentsOfClip(stL, 'd1', clip3).length, 1)
 eq('无 clipId 时不落到区间外的片段', segmentsOfClip(stL, 'd1', clip4).length, 0)
+
+/* ---------- 进度条：该打师在这段里是否上过场 ---------- */
+
+const stB = fresh()
+addDancer(stB, 'A')
+removeKeyAt(stB, 0)
+// 0–20 秒在场；20 秒下场；40 秒又上场
+setPos(stB, 'd1', 0, 0.3, 0.7)
+setPos(stB, 'd1', 20, 0.3, 0.7)
+clearPos(stB, 'd1', 20)
+setPos(stB, 'd1', 40, 0.6, 0.7)
+
+ok('在场区间 → 显示', isOnStageDuring(stB, 'd1', 5, 15) === true)
+ok('全程下场区间 → 隐藏', isOnStageDuring(stB, 'd1', 22, 35) === false)
+ok('包含上场点 → 显示', isOnStageDuring(stB, 'd1', 35, 45) === true)
+ok('上场点正好落在片段结束处 → 属于下一段，隐藏', isOnStageDuring(stB, 'd1', 30, 40) === false)
+ok('没选打师时一律显示', isOnStageDuring(stB, null, 22, 35) === true)
+ok('空区间视为不在场', isOnStageDuring(stB, 'd1', 10, 10) === false)
+
+// 下场有淡出时长：淡出窗口跨进片段就算在场
+const stF = fresh()
+addDancer(stF, 'A')
+removeKeyAt(stF, 0)
+setPos(stF, 'd1', 0, 0.5, 0.7)
+clearPos(stF, 'd1', 30)
+setKeyDuration(stF, 30, 2) // 28–30 秒淡出
+ok('淡出进行中仍算在场 → 显示', isOnStageDuring(stF, 'd1', 20, 29) === true)
+ok('淡出结束后 → 隐藏', isOnStageDuring(stF, 'd1', 30.5, 40) === false)
+
+// 硬切：到点就没
+const stH = fresh()
+addDancer(stH, 'A')
+removeKeyAt(stH, 0)
+setPos(stH, 'd1', 0, 0.5, 0.7)
+clearPos(stH, 'd1', 30)
+toggleHard(stH, 30)
+ok('硬切后立刻隐藏', isOnStageDuring(stH, 'd1', 30, 40) === false)
+ok('硬切前仍然显示', isOnStageDuring(stH, 'd1', 10, 25) === true)
 
 /* ---------- 结果 ---------- */
 

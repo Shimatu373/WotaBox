@@ -19,6 +19,7 @@ import {
   clearPos,
   cloneSegments,
   importClipSteps,
+  isOnStageDuring,
   pasteSegments,
   removeDancer,
   removeKeyAt,
@@ -390,6 +391,16 @@ const visibleKeys = computed(() => {
   return stage.keys.filter((key) => key.pos[k])
 })
 
+/** 进度条上要画的片段：选了打师就只显示他上过场的片段 */
+const barSegments = computed(() =>
+  clips.value
+    .map((c, i) => ({ clip: c, color: CLIP_COLORS[i % CLIP_COLORS.length] }))
+    .filter(({ clip }) => !selectedKey.value || isOnStageDuring(stage, selectedKey.value, clip.a, clip.b)),
+)
+
+/** 被隐藏掉的片段数（用于提示，避免以为数据丢了） */
+const hiddenClipCount = computed(() => clips.value.length - barSegments.value.length)
+
 const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
 </script>
 
@@ -536,13 +547,13 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             @pointercancel="endBar"
           >
             <div
-              v-for="(c, i) in clips"
-              :key="c.id"
+              v-for="item in barSegments"
+              :key="item.clip.id"
               class="seg"
-              :style="{ left: pct(c.a), width: pct(c.b - c.a), background: CLIP_COLORS[i % CLIP_COLORS.length] }"
-              :title="`${c.name} ${fmtClock(c.a)}–${fmtClock(c.b)}`"
+              :style="{ left: pct(item.clip.a), width: pct(item.clip.b - item.clip.a), background: item.color }"
+              :title="`${item.clip.name} ${fmtClock(item.clip.a)}–${fmtClock(item.clip.b)}`"
             >
-              <span class="seg-label">{{ c.name }}</span>
+              <span class="seg-label">{{ item.clip.name }}</span>
             </div>
             <div
               v-for="k in stage.keys"
@@ -560,7 +571,10 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
             <span class="t-now">{{ fmtClock(time) }}</span>
             <span class="t-total">/ {{ fmtClock(dur) }}</span>
             <span class="t-sep">·</span>
-            <span class="t-info">片段 {{ clips.length }}</span>
+            <span class="t-info">
+              片段 {{ barSegments.length }}<template v-if="hiddenClipCount">／{{ clips.length }}（隐藏 {{ hiddenClipCount }}
+                段未上场）</template>
+            </span>
             <span class="t-sep">·</span>
             <span class="t-info">
               关键帧 {{ stage.keys.length }}<template v-if="selected">（{{ selected.name }}：{{ visibleKeys.length }}）</template>
