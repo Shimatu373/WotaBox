@@ -13,6 +13,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { fmtClock, stageOf, textStep } from '../composables/useChoreo.js'
 import { playerClock, clockHasFile } from '../composables/playerClock.js'
 import { useAudioPlayer } from '../composables/useAudioPlayer.js'
+import { openHelp } from '../composables/useHelp.js'
 import {
   addDancer,
   canDragDancer,
@@ -422,6 +423,7 @@ const pct = (t) => `${(Math.max(0, Math.min(dur.value, t)) / dur.value) * 100}%`
           <span class="sync-state" :class="{ on: playerReady }">
             {{ playerReady ? '🔊 本页控制播放器' : '🔇 静默预览（播放器未载入这首歌）' }}
           </span>
+          <button class="ghost" type="button" title="看帮助" @click="openHelp('keyframe')">? 帮助</button>
           <button class="ghost" type="button" @click="playingNow ? pauseLocal() : playLocal()">
             {{ playingNow ? '⏸ 暂停' : '▶ 播放' }}
           </button>

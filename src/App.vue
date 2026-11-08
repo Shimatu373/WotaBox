@@ -9,6 +9,8 @@ import FavoritesPanel from './components/FavoritesPanel.vue'
 import BackupPanel from './components/BackupPanel.vue'
 import CollapsibleCard from './components/CollapsibleCard.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
+import HelpPanel from './components/HelpPanel.vue'
+import { helpOpen, helpTarget, closeHelp, openHelp } from './composables/useHelp.js'
 
 /** 版本号由 vite.config.js 从 package.json 注入（__APP_VERSION__） */
 const appVersion = __APP_VERSION__
@@ -24,6 +26,7 @@ const upcoming = [
     <header class="hero">
       <h1>WotaBox</h1>
       <p class="sub">给打师的学习与练习助手 🐋</p>
+      <button class="help-entry" type="button" @click="openHelp('start')">📖 帮助 · 第一次用点这里</button>
     </header>
 
     <InstallPrompt />
@@ -58,6 +61,8 @@ const upcoming = [
     </CollapsibleCard>
 
     <footer>v{{ appVersion }} · WotaBox</footer>
+
+    <HelpPanel v-if="helpOpen" :initial="helpTarget" @close="closeHelp" />
   </div>
 </template>
 
@@ -71,6 +76,18 @@ const upcoming = [
 .hero {
   text-align: center;
   padding: 8px 0 20px;
+}
+
+.help-entry {
+  margin-top: 12px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid #2f6fd0;
+  background: rgba(47, 111, 208, 0.14);
+  color: #cfe3ff;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 h1 {

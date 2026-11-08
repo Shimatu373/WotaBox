@@ -1,14 +1,14 @@
 {
   "name": "wotabox",
   "private": true,
-  "version": "0.10.6",
+  "version": "0.11.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler pages deploy dist --project-name=wotabox",
-    "test": "node scripts/check-usage.mjs && node scripts/test-data.mjs && node scripts/test-choreo.mjs && node scripts/test-choreo-migrate.mjs && node scripts/test-stage.mjs"
+    "test": "node scripts/check-usage.mjs && node scripts/test-data.mjs && node scripts/test-choreo.mjs && node scripts/test-choreo-migrate.mjs && node scripts/test-stage.mjs && node scripts/test-help.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

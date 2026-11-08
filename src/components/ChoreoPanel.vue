@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import CollapsibleCard from './CollapsibleCard.vue'
 import DifficultyBar from './DifficultyBar.vue'
 import StagePanel from './StagePanel.vue'
+import { openHelp } from '../composables/useHelp.js'
 import { downloadChoreo, importChoreoFile } from '../composables/useChoreoShare.js'
 import { WAZA } from '../data/waza.js'
 import {
@@ -179,6 +180,7 @@ function addWaza(id) {
       <div class="song-head">
         <span class="song-name">{{ g.fileName }}</span>
         <span class="song-len">{{ fmtClock(g.duration) }}</span>
+        <button class="help-mini" type="button" @click="openHelp('stage')">怎么用？</button>
         <button class="copy stage-btn" type="button" @click="openStage(g)">站位视图</button>
         <button class="copy" type="button" @click="copyGroup(g)">
           {{ copiedKey === g.songKey ? '已复制 ✓' : '复制编排' }}
@@ -495,6 +497,19 @@ function addWaza(id) {
   padding-left: 8px;
 }
 
+
+.help-mini {
+  flex: none;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: #7f9ac0;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+}
 
 .share-row {
   display: flex;
